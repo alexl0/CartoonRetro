@@ -49,13 +49,14 @@ public class Main {
 			}
 			System.out.println("-------------------");
 		}
-		
+
 		//Ejemplo para ver como se reproduce
-		
 		VLCController vlcController = new VLCController();
 		for(Series series : seriesList)
 			if(series.getNameOfSerie().equals("Naruto"))
-				vlcController.playVideo(series.getPath() + "\\" + series.getEpisodes().get(0).getFileName());
+				for(Episode episode : series.getEpisodes())
+					if(episode.getEpisodeNumber()==222)
+						vlcController.playVideo(series.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
 
 
 
@@ -84,107 +85,114 @@ public class Main {
 	}
 
 	private static List<Series> createSeriesFromRoute(String route) {
-	    List<Series> seriesList = new ArrayList<>();
+		List<Series> seriesList = new ArrayList<>();
 
-	    File routeDir = new File(route);
-	    if (routeDir.exists() && routeDir.isDirectory()) {
-	        File[] seriesDirs = routeDir.listFiles(File::isDirectory);
-	        if (seriesDirs != null) {
-	            for (File seriesDir : seriesDirs) {
-	                Series series = new Series();
-	                series.setNameOfSerie(seriesDir.getName());
-	                series.setPath(route + "\\" + series.getNameOfSerie());
+		File routeDir = new File(route);
+		if (routeDir.exists() && routeDir.isDirectory()) {
+			File[] seriesDirs = routeDir.listFiles(File::isDirectory);
+			if (seriesDirs != null) {
+				for (File seriesDir : seriesDirs) {
+					Series series = new Series();
+					series.setNameOfSerie(seriesDir.getName());
+					series.setPath(route + "\\" + series.getNameOfSerie());
 
-	                List<Episode> episodes = new ArrayList<>();
-	                File[] videoFiles = seriesDir.listFiles((dir, name) -> name.endsWith(".mp4"));
-	                if (videoFiles != null) {
-	                    for (File videoFile : videoFiles) {
-	                        Episode episode = new Episode();
-	                        episode.setFileName(videoFile.getName());
+					List<Episode> episodes = new ArrayList<>();
+					File[] videoFiles = seriesDir.listFiles((dir, name) -> {
+					    String lowerCaseName = name.toLowerCase();
+					    return lowerCaseName.endsWith(".mp4")
+					            || lowerCaseName.endsWith(".mkv")
+					            || lowerCaseName.endsWith(".avi");
+					});
+					if (videoFiles != null) {
+						for (File videoFile : videoFiles) {
+							Episode episode = new Episode();
+							episode.setFileName(videoFile.getName());
 
-	                        // Extract episode number and name from the file name
-	                        String fileName = videoFile.getName().replace(".mp4", "");
-	                        String[] parts = fileName.split("~", 2);
-	                        if (parts.length == 2) {
-	                            try {
-	                                episode.setEpisodeNumber(Integer.parseInt(parts[0]));
-	                                episode.setNameOfEpisode(parts[1]);
-	                            } catch (NumberFormatException e) {
-	                            	System.out.println("Invalid episode number");
-	                                episode.setEpisodeNumber(-1); // Invalid episode number
-	                                episode.setNameOfEpisode(fileName);
-	                            }
-	                        } else {
-	                            episode.setNameOfEpisode(fileName);
-	                            episode.setEpisodeNumber(-1); // Invalid episode number
-	                        }
+							// Extract episode number and name from the file name
+							String fileName = videoFile.getName().replace(".mp4", "")
+							        .replace(".mkv", "")
+							        .replace(".avi", "");
+							String[] parts = fileName.split("~", 2);
+							if (parts.length == 2) {
+								try {
+									episode.setEpisodeNumber(Integer.parseInt(parts[0]));
+									episode.setNameOfEpisode(parts[1]);
+								} catch (NumberFormatException e) {
+									System.out.println("Invalid episode number");
+									episode.setEpisodeNumber(-1); // Invalid episode number
+									episode.setNameOfEpisode(fileName);
+								}
+							} else {
+								episode.setNameOfEpisode(fileName);
+								episode.setEpisodeNumber(-1); // Invalid episode number
+							}
 
-	                        // Set the duration of the episode (you can obtain this information from the video file)
-	                        episode.setDurationSeconds(getVideoDurationInSeconds(series.getPath() + "\\" + episode.getFileName())); // Replace with actual duration
+							// Set the duration of the episode (you can obtain this information from the video file)
+							episode.setDurationSeconds(getVideoDurationInSeconds(series.getPath() + "\\" + episode.getFileName())); // Replace with actual duration
 
-	                        // Set the width and height of the episode
-	                        String videoInfo = getVideoInfo(videoFile.getAbsolutePath());
-	                        String[] dimensions = videoInfo.split("x");
-	                        if (dimensions.length == 2) {
-	                            try {
-	                                episode.setWidth(Integer.parseInt(dimensions[0].trim()));
-	                                episode.setHeight(Integer.parseInt(dimensions[1].trim()));
-	                            } catch (NumberFormatException e) {
-	                                System.out.println("Invalid width or height");
-	                            }
-	                        }
-	                        
-	                        episodes.add(episode);
-	                    }
-	                }
+							// Set the width and height of the episode
+							String videoInfo = getVideoInfo(videoFile.getAbsolutePath());
+							String[] dimensions = videoInfo.split("x");
+							if (dimensions.length == 2) {
+								try {
+									episode.setWidth(Integer.parseInt(dimensions[0].trim()));
+									episode.setHeight(Integer.parseInt(dimensions[1].trim()));
+								} catch (NumberFormatException e) {
+									System.out.println("Invalid width or height");
+								}
+							}
 
-	                series.setEpisodes(episodes);
-	                seriesList.add(series);
-	            }
-	        }
-	    }
+							episodes.add(episode);
+						}
+					}
 
-	    return seriesList;
+					series.setEpisodes(episodes);
+					seriesList.add(series);
+				}
+			}
+		}
+
+		return seriesList;
 	}
 
 	// IO output operations with video with metadata using ProcessBuilder and the mediainfo command
-    public static int getVideoDurationInSeconds(String videoFilePath) {
-        try {
-            Path path = Paths.get(videoFilePath);
+	public static int getVideoDurationInSeconds(String videoFilePath) {
+		try {
+			Path path = Paths.get(videoFilePath);
 
-            // Execute mediainfo command and capture output
-            ProcessBuilder processBuilder = new ProcessBuilder("mediainfo", "--Inform=Video;%Duration%", path.toString());
-            Process process = processBuilder.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			// Execute mediainfo command and capture output
+			ProcessBuilder processBuilder = new ProcessBuilder("mediainfo", "--Inform=Video;%Duration%", path.toString());
+			Process process = processBuilder.start();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
-            // Read the duration from the output
-            String durationString = reader.readLine();
-            int durationInSeconds = Integer.parseInt(durationString) / 1000;
+			// Read the duration from the output
+			String durationString = reader.readLine();
+			int durationInSeconds = Integer.parseInt(durationString) / 1000;
 
-            return durationInSeconds;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+			return durationInSeconds;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-        return -1; // Failed to retrieve duration
-    }
-    public static String getVideoInfo(String videoFilePath) {
-        try {
-            Path path = Paths.get(videoFilePath);
+		return -1; // Failed to retrieve duration
+	}
+	public static String getVideoInfo(String videoFilePath) {
+		try {
+			Path path = Paths.get(videoFilePath);
 
-            // Execute mediainfo command and capture output
-            ProcessBuilder processBuilder = new ProcessBuilder("mediainfo", "--Inform=Video;%Width%x%Height%", path.toString());
-            Process process = processBuilder.start();
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+			// Execute mediainfo command and capture output
+			ProcessBuilder processBuilder = new ProcessBuilder("mediainfo", "--Inform=Video;%Width%x%Height%", path.toString());
+			Process process = processBuilder.start();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
-            // Read the video info from the output
-            String videoInfo = reader.readLine();
+			// Read the video info from the output
+			String videoInfo = reader.readLine();
 
-            return videoInfo;
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+			return videoInfo;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-        return ""; // Failed to retrieve video info
-    }
+		return ""; // Failed to retrieve video info
+	}
 }

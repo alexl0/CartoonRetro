@@ -8,7 +8,7 @@ import java.awt.*;
 
 public class VLCController {
 
-    public void playVideo(String path) {
+    public void playVideo(String path, int episodeWidth, int episodeHeight) {
         SwingUtilities.invokeLater(() -> {
 
             // Create the media player component
@@ -18,11 +18,13 @@ public class VLCController {
             JFrame frame = new JFrame("VLCJ Video Player");
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.setContentPane(mediaPlayerComponent);
-            frame.setPreferredSize(new Dimension(800, 600));
+
+            frame.setPreferredSize(new Dimension(episodeWidth, episodeHeight + 28)); // Add 28 due to the 28 pixels of the window bar
             frame.pack();
             frame.setVisible(true);
 
             MediaPlayer mediaPlayer = mediaPlayerComponent.mediaPlayer();
+
             mediaPlayer.media().play(path);
         });
     }
