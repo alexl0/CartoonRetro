@@ -4,6 +4,7 @@ package cartoonretro;
 import cartoonretro.chatbot.ChatGPTClient;
 import cartoonretro.obs.OBSController;
 import cartoonretro.twitch.TwitchAPI;
+import cartoonretro.vlc.VLCController;
 import cartoonretro.model.Episode;
 import cartoonretro.model.Series;
 // Input / output stuff (to read the properties file with the passwords and api keys)
@@ -43,12 +44,18 @@ public class Main {
 				System.out.print("Episode Number: " + episode.getEpisodeNumber());
 				System.out.print("\t|||||\tEpisode Name: " + episode.getNameOfEpisode());
 				System.out.print("\t|||||\tFile Name: " + episode.getFileName());
-				System.out.println("\t|||||\tDuration Seconds: " + episode.getDurationSeconds());
+				System.out.print("\t|||||\tDuration Seconds: " + episode.getDurationSeconds());
+				System.out.println("\t|||||\tDimensions: " + episode.getWidth() + "x" + episode.getHeight());
 			}
 			System.out.println("-------------------");
 		}
-
-
+		
+		//Ejemplo para ver como se reproduce
+		
+		VLCController vlcController = new VLCController();
+		for(Series series : seriesList)
+			if(series.getNameOfSerie().equals("Naruto"))
+				vlcController.playVideo(series.getPath() + "\\" + series.getEpisodes().get(0).getFileName());
 
 
 
@@ -115,6 +122,18 @@ public class Main {
 	                        // Set the duration of the episode (you can obtain this information from the video file)
 	                        episode.setDurationSeconds(getVideoDurationInSeconds(series.getPath() + "\\" + episode.getFileName())); // Replace with actual duration
 
+	                        // Set the width and height of the episode
+	                        String videoInfo = getVideoInfo(videoFile.getAbsolutePath());
+	                        String[] dimensions = videoInfo.split("x");
+	                        if (dimensions.length == 2) {
+	                            try {
+	                                episode.setWidth(Integer.parseInt(dimensions[0].trim()));
+	                                episode.setHeight(Integer.parseInt(dimensions[1].trim()));
+	                            } catch (NumberFormatException e) {
+	                                System.out.println("Invalid width or height");
+	                            }
+	                        }
+	                        
 	                        episodes.add(episode);
 	                    }
 	                }
@@ -128,6 +147,7 @@ public class Main {
 	    return seriesList;
 	}
 
+	// IO output operations with video with metadata using ProcessBuilder and the mediainfo command
     public static int getVideoDurationInSeconds(String videoFilePath) {
         try {
             Path path = Paths.get(videoFilePath);
@@ -148,5 +168,23 @@ public class Main {
 
         return -1; // Failed to retrieve duration
     }
-	
+    public static String getVideoInfo(String videoFilePath) {
+        try {
+            Path path = Paths.get(videoFilePath);
+
+            // Execute mediainfo command and capture output
+            ProcessBuilder processBuilder = new ProcessBuilder("mediainfo", "--Inform=Video;%Width%x%Height%", path.toString());
+            Process process = processBuilder.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+
+            // Read the video info from the output
+            String videoInfo = reader.readLine();
+
+            return videoInfo;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return ""; // Failed to retrieve video info
+    }
 }

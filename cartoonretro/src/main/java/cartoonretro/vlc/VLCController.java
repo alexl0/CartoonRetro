@@ -8,7 +8,7 @@ import java.awt.*;
 
 public class VLCController {
 
-    public static void main(String[] args) {
+    public void playVideo(String path) {
         SwingUtilities.invokeLater(() -> {
 
             // Create the media player component
@@ -22,9 +22,8 @@ public class VLCController {
             frame.pack();
             frame.setVisible(true);
 
-            // Play the video (replace "/path/to/your/video.mp4" with your video file path)
             MediaPlayer mediaPlayer = mediaPlayerComponent.mediaPlayer();
-            mediaPlayer.media().play("E:\\PCEXTERNO\\Completo Descargado\\Naruto\\Naruto\\Naruto - Capitulo 001 - Entra En Escena Naruto Uzumaki.mp4");
+            mediaPlayer.media().play(path);
         });
     }
 }
