@@ -29,35 +29,35 @@ public class Main {
 	private static String twitchStreamKey;
 	private static String obsWebSocketPass;
 
-	// Path to the folder containing series folders TODO the series doesn't get the path when running createSeriesFromRoute()
+	// Path to the folder containing series folders
 	static final String route = "E:\\PCEXTERNO\\Completo";
 
 	public static void main(String[] args) {
 		readProperties();
 		List<Series> seriesList = createSeriesFromRoute(route);
 
-		// Now you have a list of Series objects with their corresponding episodes
-		// You can use this list to set up your schedule or perform other operations
+		// I print everything to check that everything is alright
 		for (Series series : seriesList) {
-			System.out.println("Series Name: " + series.getNameOfSerie());
+			System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSeries Name: " + series.getNameOfSerie());
 			for (Episode episode : series.getEpisodes()) {
 				System.out.print("Episode Number: " + episode.getEpisodeNumber());
 				System.out.print("\t|||||\tEpisode Name: " + episode.getNameOfEpisode());
 				System.out.print("\t|||||\tFile Name: " + episode.getFileName());
 				System.out.print("\t|||||\tDuration Seconds: " + episode.getDurationSeconds());
-				System.out.println("\t|||||\tDimensions: " + episode.getWidth() + "x" + episode.getHeight());
+				System.out.print("\t|||||\tDimensions: " + episode.getWidth() + "x" + episode.getHeight());
+				System.out.println("\t|||||\tSeasonNumber: " + episode.getSeasonNumber());
 			}
 			System.out.println("-------------------");
 		}
-
+/*
 		//Ejemplo para ver como se reproduce
 		VLCController vlcController = new VLCController();
 		for(Series series : seriesList)
 			if(series.getNameOfSerie().equals("Naruto"))
 				for(Episode episode : series.getEpisodes())
-					if(episode.getEpisodeNumber()==222)
+					if(episode.getEpisodeNumber()==220)
 						vlcController.playVideo(series.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
-
+*/
 
 
 		//		OBSController obsController = new OBSController(obsWebSocketPass);
@@ -112,20 +112,30 @@ public class Main {
 							String fileName = videoFile.getName().replace(".mp4", "")
 							        .replace(".mkv", "")
 							        .replace(".avi", "");
-							String[] parts = fileName.split("~", 2);
-							if (parts.length == 2) {
-								try {
-									episode.setEpisodeNumber(Integer.parseInt(parts[0]));
-									episode.setNameOfEpisode(parts[1]);
-								} catch (NumberFormatException e) {
-									System.out.println("Invalid episode number");
-									episode.setEpisodeNumber(-1); // Invalid episode number
-									episode.setNameOfEpisode(fileName);
-								}
-							} else {
-								episode.setNameOfEpisode(fileName);
-								episode.setEpisodeNumber(-1); // Invalid episode number
-							}
+	                        String[] parts = fileName.split("~", 3);
+	                        if (parts.length == 3) {
+	                            try {
+	                                episode.setEpisodeNumber(Integer.parseInt(parts[0]));
+	                                episode.setNameOfEpisode(parts[1]);
+	                                episode.setSeasonNumber(Integer.parseInt(parts[2]));
+	                            } catch (NumberFormatException e) {
+	                                System.out.println("Invalid episode number or season number");
+	                                episode.setEpisodeNumber(-1); // Invalid episode number
+	                                episode.setNameOfEpisode(fileName);
+	                            }
+	                        } else if (parts.length == 2) {
+	                            try {
+	                                episode.setEpisodeNumber(Integer.parseInt(parts[0]));
+	                                episode.setNameOfEpisode(parts[1]);
+	                            } catch (NumberFormatException e) {
+	                                System.out.println("Invalid episode number");
+	                                episode.setEpisodeNumber(-1); // Invalid episode number
+	                                episode.setNameOfEpisode(fileName);
+	                            }
+	                        } else {
+	                            episode.setNameOfEpisode(fileName);
+	                            episode.setEpisodeNumber(-1); // Invalid episode number
+	                        }
 
 							// Set the duration of the episode (you can obtain this information from the video file)
 							episode.setDurationSeconds(getVideoDurationInSeconds(series.getPath() + "\\" + episode.getFileName())); // Replace with actual duration

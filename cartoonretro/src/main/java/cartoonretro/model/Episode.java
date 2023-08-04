@@ -7,6 +7,7 @@ public class Episode {
 	private String fileName;
 	private int width;
 	private int height;
+	private int seasonNumber;
 
 	public int getEpisodeNumber() {
 		return episodeNumber;
@@ -44,4 +45,11 @@ public class Episode {
 	public void setHeight(int height) {
 		this.height = height;
 	}
+	public int getSeasonNumber() {
+		return seasonNumber;
+	}
+	public void setSeasonNumber(int seasonNumber) {
+		this.seasonNumber = seasonNumber;
+	}
+
 }
