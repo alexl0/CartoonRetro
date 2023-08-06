@@ -4,10 +4,12 @@ public class Episode {
 	private int episodeNumber;
 	private int durationSeconds;
 	private String nameOfEpisode;
+	private String nameOfSerie;
 	private String fileName;
 	private int width;
 	private int height;
 	private int seasonNumber;
+	private String seasonName;
 
 	public int getEpisodeNumber() {
 		return episodeNumber;
@@ -51,5 +53,16 @@ public class Episode {
 	public void setSeasonNumber(int seasonNumber) {
 		this.seasonNumber = seasonNumber;
 	}
-
+	public String getNameOfSerie() {
+		return nameOfSerie;
+	}
+	public void setNameOfSerie(String nameOfSerie) {
+		this.nameOfSerie = nameOfSerie;
+	}
+	public String getSeasonName() {
+		return seasonName;
+	}
+	public void setSeasonName(String seasonName) {
+		this.seasonName = seasonName;
+	}
 }
