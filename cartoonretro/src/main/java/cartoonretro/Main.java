@@ -32,6 +32,18 @@ public class Main {
 	private static String obsWebSocketPass;
 
 	// Path to the folder containing series folders. Use a route like this: E:\\PCEXTERNO\\Completo
+	// TODO en algunos animes como oliver y benji en la temporada road to 2002, hay que seleccionar manualmente el audio en castellano, por defecto viene en latino.
+	// igual también valdría borrar el latino del archivo de vídeo
+	
+	/**
+	 * TODO También estaría guay que se tuviera en cuenta el número de personas viendo el streaming. Por ejemplo, si hay solo 1 persona, darle permisos para que cambié la serie
+	 * que se está mostrando, y elija el qué capítulo quiere ver (sin afectar a la planificación, si ese capítulo se tenía que mostrar dentro de 6 horas, se mostrará igual)
+	 * En cambio, si hay en el streaming 10 personas, que tengan que estar de acuerdo 4 para hacer un comando !skip. Si un 40% de los espectadores hace !skip se pasa a la siguiente serie
+	 * en la planificación. Todo esto mostrándolo por comandos de chat. Cuando haces !skip, que te diga:
+	 * 		"1 persona quiere saltar el capítulo y pasar a otra serie. Si 3 más hacen !skip, se saltará."
+	 * 
+	 *  
+	 */
 	static final String route = "E:\\PCEXTERNO\\Completo";
 
 	public static void main(String[] args) {
@@ -45,11 +57,11 @@ public class Main {
 		// I print everything to check that everything is alright
 		try (PrintWriter writer = new PrintWriter(new FileWriter("SeriesAndEpisodesList.txt"))) {
 			for (Series series : seriesList) {
-				writer.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSeries Name: " + series.getNameOfSerie() + "Number of episodes: " + series.getNumberOfEpisodes());
+				writer.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSeries Name: " + series.getNameOfSerie() + "\tNumber of episodes: " + series.getEpisodes().size());
 				for (Episode episode : series.getEpisodes()) {
 					writer.print("Episode Number: " + episode.getEpisodeNumber());
 					writer.print("\t|||||\tDuration Seconds: " + episode.getDurationSeconds());
-					writer.print("\t|||||\tDimensions: " + episode.getWidth() + "x" + episode.getHeight());
+					writer.print("\t|||||\tDimensions: " + episode.getWidth() + "x" + episode.getHeight()+"\t");
 					writer.print("\t|||||\tSeasonNumber: " + episode.getSeasonNumber());
 					writer.print("\t|||||\tSeries Name: " + episode.getNameOfSerie());
 					writer.print("\t|||||\tSeasonName: " + episode.getSeasonName());
@@ -61,7 +73,7 @@ public class Main {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		/*
+
 		//Ejemplo para ver como se reproduce
 		VLCController vlcController = new VLCController();
 		for(Series series : seriesList)
@@ -69,7 +81,7 @@ public class Main {
 				for(Episode episode : series.getEpisodes())
 					if(episode.getEpisodeNumber()==220)
 						vlcController.playVideo(series.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
-		 */
+
 
 
 		//		OBSController obsController = new OBSController(obsWebSocketPass);
@@ -125,7 +137,10 @@ public class Main {
 							// Extract episode number and name from the file name
 							String fileName = videoFile.getName().replace(".mp4", "")
 									.replace(".mkv", "")
-									.replace(".avi", "");
+									.replace(".avi", "")
+									.replace(".MP4", "")
+									.replace(".MKV", "")
+									.replace(".AVI", "");
 							String[] parts = fileName.split("~", 4);
 							try {
 								if (parts.length == 4) {
