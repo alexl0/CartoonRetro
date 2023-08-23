@@ -5,6 +5,7 @@ import cartoonretro.chatbot.ChatGPTClient;
 import cartoonretro.obs.OBSController;
 import cartoonretro.twitch.TwitchAPI;
 import cartoonretro.vlc.VLCController;
+import cartoonretro.model.Database;
 import cartoonretro.model.Episode;
 import cartoonretro.model.Series;
 // Input / output stuff (to read the properties file with the passwords and api keys)
@@ -18,6 +19,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.sql.SQLException;
 // Data structures stuff
 import java.util.Properties;
 import java.util.ArrayList;
@@ -34,7 +36,7 @@ public class Main {
 	// Path to the folder containing series folders. Use a route like this: E:\\PCEXTERNO\\Completo
 	// TODO en algunos animes como oliver y benji en la temporada road to 2002, hay que seleccionar manualmente el audio en castellano, por defecto viene en latino.
 	// igual también valdría borrar el latino del archivo de vídeo
-	
+
 	/**
 	 * TODO También estaría guay que se tuviera en cuenta el número de personas viendo el streaming. Por ejemplo, si hay solo 1 persona, darle permisos para que cambié la serie
 	 * que se está mostrando, y elija el qué capítulo quiere ver (sin afectar a la planificación, si ese capítulo se tenía que mostrar dentro de 6 horas, se mostrará igual)
@@ -47,45 +49,49 @@ public class Main {
 	static final String route = "E:\\PCEXTERNO\\Completo";
 
 	public static void main(String[] args) {
+
+		//Read keys
 		readProperties();
+
+		//Generate series lists
 		long time1 = System.currentTimeMillis();
-		List<Series> seriesList = createSeriesFromRoute(route);
+		//List<Series> seriesList = createSeriesFromRoute(route);		//Generate series from route
+		List<Series> seriesList = retrieveSeriesFromDB();			//Generate series from DB
 		long time2=System.currentTimeMillis();
-		double executionTimeMillis = time2 - time1;
-		double executionTimeMinutes = executionTimeMillis / 1000.0 / 60.0;
+		long timeDifferenceInMillis = time2 - time1; 
+		double executionTimeMinutes = (double) timeDifferenceInMillis / (1000.0 * 60.0);
 
-		// I print everything to check that everything is alright
-		try (PrintWriter writer = new PrintWriter(new FileWriter("SeriesAndEpisodesList.txt"))) {
-			for (Series series : seriesList) {
-				writer.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSeries Name: " + series.getNameOfSerie() + "\tNumber of episodes: " + series.getEpisodes().size());
-				for (Episode episode : series.getEpisodes()) {
-					writer.print("Episode Number: " + episode.getEpisodeNumber());
-					writer.print("\t|||||\tDuration Seconds: " + episode.getDurationSeconds());
-					writer.print("\t|||||\tDimensions: " + episode.getWidth() + "x" + episode.getHeight()+"\t");
-					writer.print("\t|||||\tSeasonNumber: " + episode.getSeasonNumber());
-					writer.print("\t|||||\tSeries Name: " + episode.getNameOfSerie());
-					writer.print("\t|||||\tSeasonName: " + episode.getSeasonName());
-					writer.print("\t|||||\tEpisode Name: " + episode.getNameOfEpisode());
-					writer.println("\t|||||\tFile Name: " + episode.getFileName());
-				}
-			}
-			writer.println("\n\n\n\n\n\n\n\n\n------------------- Execution time in minutes: " + executionTimeMinutes);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		/*
+		writeSeriesFileTxt(seriesList, executionTimeMinutes, "Route");
+		writeSeriesToDB(seriesList);
+		 */
+		writeSeriesFileTxt(seriesList, executionTimeMinutes, "DB");
 
-		//Ejemplo para ver como se reproduce
+
+		//Connect to OBS
+		OBSController obsController = new OBSController(obsWebSocketPass);
+		obsController.connect();
+
+		//Simple example to reproduce
 		VLCController vlcController = new VLCController();
 		for(Series series : seriesList)
-			if(series.getNameOfSerie().equals("Naruto"))
-				for(Episode episode : series.getEpisodes())
-					if(episode.getEpisodeNumber()==220)
-						vlcController.playVideo(series.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
+			//if(series.getNameOfSerie().toLowerCase().equals("prueba2"))
+			for(Episode episode : series.getEpisodes()) {
+				vlcController.playVideo(series.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
+
+				//Calculate aspect ratio
+				String aspectRatio = calculateAspectRatio(episode.getWidth(), episode.getHeight());
+				obsController.setScene("Series"+ aspectRatio);
+
+				try {
+					Thread.sleep(episode.getDurationSeconds()*1000);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
 
 
 
-		//		OBSController obsController = new OBSController(obsWebSocketPass);
-		//		obsController.connect();
 
 		//TwitchAPI twitchAPI = new TwitchAPI(twitchStreamKey);
 
@@ -193,6 +199,70 @@ public class Main {
 		return seriesList;
 	}
 
+	public static List<Series> retrieveSeriesFromDB() {
+		List<Series> seriesList = new ArrayList<>();
+		try {
+			// Initialize the database connection
+			Database.initializeDatabase();
+
+			// Retrieve series from the database
+			List<Series> seriesFromDB = Database.retrieveSeriesFromDB(); // Implement this method in your Database class
+			for (Series s : seriesFromDB) {
+				Series series = new Series();
+				series.setNameOfSerie(s.getNameOfSerie());
+				series.setPath(s.getPath());
+
+				// Retrieve episodes for the current series
+				List<Episode> episodes = Database.retrieveEpisodesForSeries(series.getNameOfSerie()); // Implement this method in your Database class
+				series.setEpisodes(episodes);
+
+				seriesList.add(series);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+		return seriesList;
+	}
+
+
+	private static void writeSeriesFileTxt(List<Series> seriesList, double executionTimeMinutes, String medio) {
+		// I print everything to check that everything is alright
+		try (PrintWriter writer = new PrintWriter(new FileWriter("SeriesAndEpisodesList" + medio + ".txt"))) {
+			for (Series series : seriesList) {
+				writer.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSeries Name: " + series.getNameOfSerie() + "\tNumber of episodes: " + series.getEpisodes().size());
+				for (Episode episode : series.getEpisodes()) {
+					writer.print("Episode Number: " + episode.getEpisodeNumber());
+					writer.print("\t|||||\tDuration Seconds: " + episode.getDurationSeconds());
+					writer.print("\t|||||\tDimensions: " + episode.getWidth() + "x" + episode.getHeight()+"\t");
+					writer.print("\t|||||\tSeasonNumber: " + episode.getSeasonNumber());
+					writer.print("\t|||||\tSeries Name: " + episode.getNameOfSerie());
+					writer.print("\t|||||\tSeasonName: " + episode.getSeasonName());
+					writer.print("\t|||||\tEpisode Name: " + episode.getNameOfEpisode());
+					writer.println("\t|||||\tFile Name: " + episode.getFileName());
+				}
+			}
+			writer.println("\n\n\n\n\n\n\n\n\n------------------- Execution time in minutes: " + executionTimeMinutes);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	private static void writeSeriesToDB(List<Series> seriesList) {
+		try {
+			Database.initializeDatabase();
+			for(Series series:seriesList) {
+				Database.insertSeries(series);
+				for(Episode episode:series.getEpisodes()) {
+					Database.insertEpisode(episode);
+				}
+			} 
+		}
+		catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+
 	// IO output operations with video with metadata using ProcessBuilder and the mediainfo command
 	public static int getVideoDurationInSeconds(String videoFilePath) {
 		try {
@@ -239,4 +309,22 @@ public class Main {
 
 		return ""; // Failed to retrieve video info
 	}
+
+	public static String calculateAspectRatio(int width, int height) {
+		double aspectRatio = (double) width / height;
+
+		// Define common aspect ratios with a small error margin
+		double[] ratios = { 4.0 / 3, 16.0 / 9 };
+
+		// Check if the aspect ratio is within the error margin of any defined ratio
+		for (double ratio : ratios) {
+			if (Math.abs(aspectRatio - ratio) <= 0.01) {
+				return ratio == 4.0 / 3 ? "4:3" : "16:9";
+			}
+		}
+
+		// If no match is found, return the actual aspect ratio
+		return String.format("%d:%d", width, height);
+	}
+
 }

@@ -20,7 +20,8 @@ public class OBSController {
 		// Create OBSRemoteController through its builder
 		this.obsRemoteController = OBSRemoteController.builder()
 				.autoConnect(false)                       // Do not connect automatically
-				.host("192.168.1.137")                        // Set the host
+				//YOU SHOULD SET A STATIC IP ON YOUR COMPUTER, IF NOT, THIS IP VARIES ON THE WEBSOCKET SERVER SETTINGS ON OBS EVERY TIME!!        
+				.host("192.168.1.2")                        // Set the host
 				.port(4455)                               // Set the port
 				.password(obsWebSocketPass)                       // Set the password
 				.lifecycle()                              // Add some lifecycle callbacks
@@ -47,7 +48,7 @@ public class OBSController {
 
 	private void onFirstConnection() {
 		// Send a blocking call (last parameter is a timeout instead of a callback)
-		this.obsRemoteController.setStudioModeEnabled(true, 1000);
+		//this.obsRemoteController.setStudioModeEnabled(true, 1000);
 
 		try {
 			Thread.sleep(1000);
@@ -64,14 +65,15 @@ public class OBSController {
 				Thread.sleep(1000);
 			} catch (InterruptedException ignored) {}
 
-			this.obsRemoteController.setStudioModeEnabled(false, 1000);
+			//this.obsRemoteController.setStudioModeEnabled(false, 1000);
 
 			try {
 				Thread.sleep(1000);
 			} catch (InterruptedException ignored) {}
 
 			// My testing code
-			this.obsRemoteController.triggerMediaInputAction("Video640x480", "OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PLAY", 1000);
+			//this.obsRemoteController.triggerMediaInputAction("Video640x480", "OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PLAY", 1000);
+			
 			
 			this.disconnectAndReconnect();
 		});
@@ -116,5 +118,8 @@ public class OBSController {
 		System.out.println("Studio Mode State Changed to: {}" + studioModeStateChangedEvent.getStudioModeEnabled());
 	}
 
+	public void setScene(String sceneName) {
+		this.obsRemoteController.setCurrentProgramScene(sceneName, 2000);
+	}
 
 }
