@@ -1,0 +1,21 @@
+TODO
+Mirar aver que hacer con el opening, si ponerlo en otra carpeta o que. Por que da error al escanear un archivo llamado opening.avi sin número de capítulo ni nada. De momento lo voy a sacar.
+
+Además al insertar episodios, se duplican, 
+esta insert hay que hacer que solo inserte si no existe ninguna fila con tal episode_number por ejemplo
+String insertEpisodeSQL = "INSERT OR REPLACE INTO episodes (episode_number, duration_seconds, " + "name_of_episode, name_of_serie, file_name, width, height, season_number, season_name) " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+
+resoluciones probadas:
+16:9
+	1920x1080	bien
+	1280x720	bien
+	en algunos casos hay episodios que tienen 1280x664 por ejemplo, es decir, la altura no llega a 720. Tratar eso para que se expanda, pero ocupar exactamente lo mismo en pantalla que el de 1280x70, 1920x1080, etc. que sea 16:9 si o si.
+	1024x576	bien
+	960	540		bien
+
+4:3
+	1440x1080	se muestra barra blanca abajo
+	960x720		bien
+	720x540		bien 
+	720x544		

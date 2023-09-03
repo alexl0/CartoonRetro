@@ -1,39 +1,31 @@
 package cartoonretro;
 
-// Project stuff
-import cartoonretro.chatbot.ChatGPTClient;
-import cartoonretro.obs.OBSController;
-import cartoonretro.twitch.TwitchAPI;
-import cartoonretro.vlc.VLCController;
+//Project stuff
+import cartoonretro.InputOutput.InputOutput;
 import cartoonretro.model.Database;
 import cartoonretro.model.Episode;
 import cartoonretro.model.Series;
 // Input / output stuff (to read the properties file with the passwords and api keys)
-import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.File;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 // Data structures stuff
-import java.util.Properties;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * 1. Place new series in the folder.
+ * 2. Execute this class to transfer the information about the video files to the database.
+ * This saves a lot of time because reading the info from the video files is slow, while reading from DB is fast.
+ * You only need to execute this class if you've added new series to the folder.
+ */
+public class FromFilesToDB {
 
-public class Main {
 
-	// Passwords and api keys
-	private static String chatGPTApiKey;
-	private static String twitchStreamKey;
-	private static String obsWebSocketPass;
-
-	// Path to the folder containing series folders. Use a route like this: E:\\PCEXTERNO\\Completo
 	// TODO en algunos animes como oliver y benji en la temporada road to 2002, hay que seleccionar manualmente el audio en castellano, por defecto viene en latino.
 	// igual también valdría borrar el latino del archivo de vídeo
 
@@ -46,79 +38,18 @@ public class Main {
 	 * 
 	 *  
 	 */
+
+	// Path to the folder containing series folders. Use a route like this: E:\\PCEXTERNO\\Completo
 	static final String route = "E:\\PCEXTERNO\\Completo";
 
 	public static void main(String[] args) {
-
-		//Read keys
-		readProperties();
-
 		//Generate series from route
 		List<Series> seriesList = createSeriesFromRoute(route);		
-		writeSeriesFileTxt(seriesList, 0, "Route");
+		InputOutput.writeSeriesFileTxt(seriesList, 0, "Route");
 		writeSeriesToDB(seriesList);
-
-		//Generate series from DB
-		/*
-		List<Series> seriesList = null;
-		try {
-			seriesList = Database.retrieveSeriesFromDB();
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		writeSeriesFileTxt(seriesList, 0, "DB");
-		 */
-
-
-
-
-
-		//Connect to OBS
-		OBSController obsController = new OBSController(obsWebSocketPass);
-		obsController.connect();
-
-		//Simple example to reproduce
-		VLCController vlcController = new VLCController();
-
-		for(Series series : seriesList)
-			//if(series.getNameOfSerie().toLowerCase().equals("prueba2"))
-			for(Episode episode : series.getEpisodes()) {
-				vlcController.playVideo(series.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
-
-				//Calculate aspect ratio
-				String aspectRatio = calculateAspectRatio(episode.getWidth(), episode.getHeight());
-				obsController.setScene("Series"+ aspectRatio);
-
-				try {
-					Thread.sleep(episode.getDurationSeconds()*1000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-
-
-
-
-		//TwitchAPI twitchAPI = new TwitchAPI(twitchStreamKey);
-
-		//ChatGPTClient chatGPTClient = new ChatGPTClient(chatGPTApiKey);
-
 	}
 
-	private static void readProperties() {
-		// Read properties
-		Properties properties = new Properties();
-		try (InputStream input = new FileInputStream("src/PASSWORDS.properties")) {
-			properties.load(input);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
-		}
-		// Access the properties using the keys defined in your .properties file
-		chatGPTApiKey = properties.getProperty("chatgpt_api_key");
-		twitchStreamKey = properties.getProperty("twitch_stream_key");
-		obsWebSocketPass = properties.getProperty("obs_websocket_pass");
-	}
+
 
 	private static List<Series> createSeriesFromRoute(String route) {
 		List<Series> seriesList = new ArrayList<>();
@@ -205,27 +136,6 @@ public class Main {
 		return seriesList;
 	}
 
-	private static void writeSeriesFileTxt(List<Series> seriesList, double executionTimeMinutes, String medio) {
-		// I print everything to check that everything is alright
-		try (PrintWriter writer = new PrintWriter(new FileWriter("SeriesAndEpisodesList" + medio + ".txt"))) {
-			for (Series series : seriesList) {
-				writer.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nSeries Name: " + series.getNameOfSerie() + "\tNumber of episodes: " + series.getEpisodes().size());
-				for (Episode episode : series.getEpisodes()) {
-					writer.print("Episode Number: " + episode.getEpisodeNumber());
-					writer.print("\t|||||\tDuration Seconds: " + episode.getDurationSeconds());
-					writer.print("\t|||||\tDimensions: " + episode.getWidth() + "x" + episode.getHeight()+"\t");
-					writer.print("\t|||||\tSeasonNumber: " + episode.getSeasonNumber());
-					writer.print("\t|||||\tSeries Name: " + episode.getNameOfSerie());
-					writer.print("\t|||||\tSeasonName: " + episode.getSeasonName());
-					writer.print("\t|||||\tEpisode Name: " + episode.getNameOfEpisode());
-					writer.println("\t|||||\tFile Name: " + episode.getFileName());
-				}
-			}
-			writer.println("\n\n\n\n\n\n\n\n\n------------------- Execution time in minutes: " + executionTimeMinutes);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 
 	private static void writeSeriesToDB(List<Series> seriesList) {
 		try {
@@ -289,21 +199,5 @@ public class Main {
 		return ""; // Failed to retrieve video info
 	}
 
-	public static String calculateAspectRatio(int width, int height) {
-		double aspectRatio = (double) width / height;
-
-		// Define common aspect ratios with a small error margin
-		double[] ratios = { 4.0 / 3, 16.0 / 9 };
-
-		// Check if the aspect ratio is within the error margin of any defined ratio
-		for (double ratio : ratios) {
-			if (Math.abs(aspectRatio - ratio) <= 0.01) {
-				return ratio == 4.0 / 3 ? "4:3" : "16:9";
-			}
-		}
-
-		// If no match is found, return the actual aspect ratio
-		return String.format("%d:%d", width, height);
-	}
 
 }

@@ -9,7 +9,7 @@ import java.awt.*;
 
 public class VLCController {
 
-    public void playVideo(String path, int episodeWidth, int episodeHeight) {
+    public void playEpisode(String path, int episodeWidth, int episodeHeight) {
         SwingUtilities.invokeLater(() -> {
 
             // Create the media player component
