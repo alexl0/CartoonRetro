@@ -8,6 +8,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,10 +32,18 @@ public class Database {
 					"height INT, " +
 					"season_number INT, " +
 					"season_name TEXT, " +
-					"FOREIGN KEY (name_of_serie) REFERENCES series(name_of_serie))";// Foreign key reference to series table
+					"FOREIGN KEY (name_of_serie) REFERENCES series(name_of_serie), " + 
+					"UNIQUE (file_name, name_of_serie))";// Foreign key reference to series table
+
+			String createScheduleTableSQL = "CREATE TABLE IF NOT EXISTS schedule (" +
+					"id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+					"episode_id INT, " +
+					"play_datetime DATETIME, " +
+					"FOREIGN KEY (episode_id) REFERENCES episodes(id))";
 
 			connection.createStatement().executeUpdate(createSeriesTableSQL);
 			connection.createStatement().executeUpdate(createEpisodesTableSQL);
+			connection.createStatement().executeUpdate(createScheduleTableSQL);
 		}
 	}
 
@@ -54,7 +63,7 @@ public class Database {
 
 	public static void insertEpisode(Episode episode) throws SQLException {
 		try (Connection connection = DriverManager.getConnection(DATABASE_URL)) {
-			String insertEpisodeSQL = "INSERT INTO episodes (episode_number, duration_seconds, " +
+			String insertEpisodeSQL = "INSERT OR REPLACE INTO episodes (episode_number, duration_seconds, " +
 					"name_of_episode, name_of_serie, file_name, width, height, season_number, season_name) " +
 					"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
@@ -85,6 +94,7 @@ public class Database {
 				Series series = new Series();
 				series.setNameOfSerie(resultSet.getString("name_of_serie"));
 				series.setPath(resultSet.getString("path"));
+				series.setEpisodes(retrieveEpisodesForSeries(series.getNameOfSerie()));
 				seriesList.add(series);
 			}
 		}
@@ -113,6 +123,24 @@ public class Database {
 			}
 		}
 		return episodes;
+	}
+
+
+	// Scheduler
+
+	// Add an episode to the schedule table (you need to implement this)
+	private static void addEpisodeToSchedule(int episodeId, LocalTime playTime, int day) {
+		String insertSql = "INSERT INTO schedule (episode_id, play_datetime, day) VALUES (?, ?, ?)";
+		try (Connection connection = DriverManager.getConnection(DATABASE_URL)) {
+			PreparedStatement preparedStatement = connection.prepareStatement(insertSql);
+			preparedStatement.setInt(1, episodeId);
+			preparedStatement.setString(2, playTime.toString());
+			preparedStatement.setInt(3, day);
+			preparedStatement.executeUpdate();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
 	}
 
 }

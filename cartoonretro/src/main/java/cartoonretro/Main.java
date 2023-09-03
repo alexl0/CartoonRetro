@@ -53,19 +53,24 @@ public class Main {
 		//Read keys
 		readProperties();
 
-		//Generate series lists
-		long time1 = System.currentTimeMillis();
-		//List<Series> seriesList = createSeriesFromRoute(route);		//Generate series from route
-		List<Series> seriesList = retrieveSeriesFromDB();			//Generate series from DB
-		long time2=System.currentTimeMillis();
-		long timeDifferenceInMillis = time2 - time1; 
-		double executionTimeMinutes = (double) timeDifferenceInMillis / (1000.0 * 60.0);
-
-		/*
-		writeSeriesFileTxt(seriesList, executionTimeMinutes, "Route");
+		//Generate series from route
+		List<Series> seriesList = createSeriesFromRoute(route);		
+		writeSeriesFileTxt(seriesList, 0, "Route");
 		writeSeriesToDB(seriesList);
+
+		//Generate series from DB
+		/*
+		List<Series> seriesList = null;
+		try {
+			seriesList = Database.retrieveSeriesFromDB();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		writeSeriesFileTxt(seriesList, 0, "DB");
 		 */
-		writeSeriesFileTxt(seriesList, executionTimeMinutes, "DB");
+
+
+
 
 
 		//Connect to OBS
@@ -74,6 +79,7 @@ public class Main {
 
 		//Simple example to reproduce
 		VLCController vlcController = new VLCController();
+
 		for(Series series : seriesList)
 			//if(series.getNameOfSerie().toLowerCase().equals("prueba2"))
 			for(Episode episode : series.getEpisodes()) {
@@ -198,33 +204,6 @@ public class Main {
 
 		return seriesList;
 	}
-
-	public static List<Series> retrieveSeriesFromDB() {
-		List<Series> seriesList = new ArrayList<>();
-		try {
-			// Initialize the database connection
-			Database.initializeDatabase();
-
-			// Retrieve series from the database
-			List<Series> seriesFromDB = Database.retrieveSeriesFromDB(); // Implement this method in your Database class
-			for (Series s : seriesFromDB) {
-				Series series = new Series();
-				series.setNameOfSerie(s.getNameOfSerie());
-				series.setPath(s.getPath());
-
-				// Retrieve episodes for the current series
-				List<Episode> episodes = Database.retrieveEpisodesForSeries(series.getNameOfSerie()); // Implement this method in your Database class
-				series.setEpisodes(episodes);
-
-				seriesList.add(series);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-		return seriesList;
-	}
-
 
 	private static void writeSeriesFileTxt(List<Series> seriesList, double executionTimeMinutes, String medio) {
 		// I print everything to check that everything is alright
