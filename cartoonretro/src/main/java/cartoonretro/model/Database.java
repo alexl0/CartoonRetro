@@ -32,6 +32,7 @@ public class Database {
 					"height INT, " +
 					"season_number INT, " +
 					"season_name TEXT, " +
+					"play_order INT, " +
 					"FOREIGN KEY (name_of_serie) REFERENCES series(name_of_serie), " + 
 					"UNIQUE (file_name, name_of_serie))";// Foreign key reference to series table
 
@@ -64,8 +65,8 @@ public class Database {
 	public static void insertEpisode(Episode episode) throws SQLException {
 		try (Connection connection = DriverManager.getConnection(DATABASE_URL)) {
 			String insertEpisodeSQL = "INSERT OR REPLACE INTO episodes (episode_number, duration_seconds, " +
-					"name_of_episode, name_of_serie, file_name, width, height, season_number, season_name) " +
-					"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+					"name_of_episode, name_of_serie, file_name, width, height, season_number, season_name, play_order) " +
+					"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
 			PreparedStatement preparedStatement = connection.prepareStatement(insertEpisodeSQL);
 			preparedStatement.setInt(1, episode.getEpisodeNumber());
@@ -77,6 +78,7 @@ public class Database {
 			preparedStatement.setInt(7, episode.getHeight());
 			preparedStatement.setInt(8, episode.getSeasonNumber());
 			preparedStatement.setString(9, episode.getSeasonName());
+			preparedStatement.setInt(10, episode.getPlayOrder());
 
 			preparedStatement.executeUpdate();
 		}
@@ -119,6 +121,7 @@ public class Database {
 				episode.setHeight(resultSet.getInt("height"));
 				episode.setSeasonNumber(resultSet.getInt("season_number"));
 				episode.setSeasonName(resultSet.getString("season_name"));
+				episode.setPlayOrder(resultSet.getInt("play_order"));
 				episodes.add(episode);
 			}
 		}

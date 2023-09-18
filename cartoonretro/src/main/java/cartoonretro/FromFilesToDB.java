@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import java.sql.SQLException;
 // Data structures stuff
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -44,7 +45,8 @@ public class FromFilesToDB {
 
 	public static void main(String[] args) {
 		//Generate series from route
-		List<Series> seriesList = createSeriesFromRoute(route);		
+		List<Series> seriesList = createSeriesFromRoute(route);
+		populatePlayOrder(seriesList);
 		InputOutput.writeSeriesFileTxt(seriesList, 0, "Route");
 		writeSeriesToDB(seriesList);
 	}
@@ -52,6 +54,8 @@ public class FromFilesToDB {
 
 
 	private static List<Series> createSeriesFromRoute(String route) {
+		long startTime = System.currentTimeMillis();
+
 		List<Series> seriesList = new ArrayList<>();
 
 		File routeDir = new File(route);
@@ -59,6 +63,7 @@ public class FromFilesToDB {
 			File[] seriesDirs = routeDir.listFiles(File::isDirectory);
 			if (seriesDirs != null) {
 				for (File seriesDir : seriesDirs) {
+					long startTimeSerie = System.currentTimeMillis();
 					Series series = new Series();
 					series.setNameOfSerie(seriesDir.getName());
 					series.setPath(route + "\\" + series.getNameOfSerie());
@@ -128,14 +133,49 @@ public class FromFilesToDB {
 					}
 
 					series.setEpisodes(episodes);
-					seriesList.add(series);
+					seriesList.add(series);		long endTime = System.currentTimeMillis();
+					
+					long endTimeSerie = System.currentTimeMillis();
+					long elapsedTimeSerie = endTimeSerie - startTimeSerie;
+			        double elapsedTimeMinutesSerie = elapsedTimeSerie / 60000.0;
+					System.out.println("Time to create series " + series.getNameOfSerie() + " from route: " + elapsedTimeMinutesSerie + " minutes");
 				}
 			}
 		}
+		long endTime = System.currentTimeMillis();
+		long elapsedTime = endTime - startTime;
+        double elapsedTimeMinutes = elapsedTime / 60000.0;
+		System.out.println("Total Time to create series from route: " + elapsedTimeMinutes + " minutes");
 
 		return seriesList;
 	}
 
+	public static void populatePlayOrder(List<Series> seriesList) {
+		long startTime = System.currentTimeMillis();
+		for (Series series : seriesList) {
+			long startTimeSerie = System.currentTimeMillis();
+			List<Episode> episodes = series.getEpisodes();
+
+			// Sort episodes by season number and episode number
+			episodes.sort(Comparator.comparing(Episode::getSeasonNumber)
+					.thenComparing(Episode::getEpisodeNumber));
+
+			int playOrder = 1; // Initialize playOrder
+
+			for (Episode episode : episodes) {
+				episode.setPlayOrder(playOrder);
+				playOrder++;
+			}
+			long endTimeSerie = System.currentTimeMillis();
+			long elapsedTimeSerie = endTimeSerie - startTimeSerie;
+	        double elapsedTimeMinutesSerie = elapsedTimeSerie / 60000.0;
+			System.out.println("Time to sort series " + series.getNameOfSerie() + " : " + elapsedTimeMinutesSerie + " minutes");
+		}
+		long endTime = System.currentTimeMillis();
+		long elapsedTime = endTime - startTime;
+        double elapsedTimeMinutes = elapsedTime / 60000.0;
+		System.out.println("Total Time to sort episodes for series: " + elapsedTimeMinutes + " minutes");
+	}
 
 	private static void writeSeriesToDB(List<Series> seriesList) {
 		try {

@@ -10,6 +10,7 @@ public class Episode {
 	private int height;
 	private int seasonNumber;
 	private String seasonName;
+	private int playOrder;
 
 	public int getEpisodeNumber() {
 		return episodeNumber;
@@ -64,5 +65,11 @@ public class Episode {
 	}
 	public void setSeasonName(String seasonName) {
 		this.seasonName = seasonName;
+	}
+	public int getPlayOrder() {
+		return playOrder;
+	}
+	public void setPlayOrder(int playOrder) {
+		this.playOrder = playOrder;
 	}
 }

@@ -12,8 +12,10 @@ import cartoonretro.model.Database;
 import cartoonretro.model.Episode;
 import cartoonretro.model.Series;
 import cartoonretro.obs.OBSController;
+import cartoonretro.twitch.TwitchAPI;
 import cartoonretro.vlc.VLCController;
 import cartoonretro.InputOutput.InputOutput;
+import cartoonretro.chatbot.ChatGPTClient;
 
 /**
  * This class reads the video information from db, executes the video and streams to twitch.
@@ -28,6 +30,8 @@ public class FromDBToTwitch {
 
 	private static OBSController obsController;
 	private static VLCController vlcController;
+	private static TwitchAPI twitchAPI;
+	private static ChatGPTClient chatGPTClient;
 
 	private static List<Series> seriesList;
 
@@ -45,12 +49,18 @@ public class FromDBToTwitch {
 		InputOutput.writeSeriesFileTxt(seriesList, 0, "DB");
 
 
-		//Connect to OBS
+		//OBS
 		obsController = new OBSController(obsWebSocketPass);
 		obsController.connect();
 
-		//Simple example to reproduce
+		//VLC
 		vlcController = new VLCController();
+
+		//Twitch
+		//twitchAPI = new TwitchAPI(twitchStreamKey);
+
+		//ChatGPT
+		//chatGPTClient = new ChatGPTClient(chatGPTApiKey);
 
 		/*for(Series series : seriesList) {
 			if(series.getNameOfSerie().toLowerCase().equals("Doraemon (2005)")) {
@@ -85,11 +95,17 @@ public class FromDBToTwitch {
 		//playEpisodeFromFileNameAndSerie("Ben 10 Ultimate (2010)", "020~~001.avi");//720x576 (casi 4:3)
 		//playEpisodeFromFileNameAndSerie("El Chicho Terremoto", "038~Chicho Contra Todo.avi");//384x288 (4:3)
 
-
-
-		//TwitchAPI twitchAPI = new TwitchAPI(twitchStreamKey);
-
-		//ChatGPTClient chatGPTClient = new ChatGPTClient(chatGPTApiKey);
+		// 5 year schedule
+		/*for(int day=1; day<1825; day++) {
+			double totalDuration = 0.0;
+			for(Series series:seriesList) {
+				for(Episode episode:series.getEpisodes()) {
+					
+				}
+			}
+		}*/
+		
+		
 	}
 
 	/**
