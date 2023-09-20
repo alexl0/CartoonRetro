@@ -7,6 +7,8 @@ public class Series {
 
 	private List<Episode> episodes;
 	private String path;
+	private int popularity;
+	private Episode lastEpisodePlayed;
 
 	public String getNameOfSerie() {
 		return nameOfSerie;
@@ -26,5 +28,16 @@ public class Series {
 	public void setPath(String path) {
 		this.path = path;
 	}
-
+	public int getPopularity() {
+		return popularity;
+	}
+	public void setPopularity(int popularity) {
+		this.popularity = popularity;
+	}
+	public Episode getLastEpisodePlayed() {
+		return lastEpisodePlayed;
+	}
+	public void setLastEpisodePlayed(Episode lastEpisodePlayed) {
+		this.lastEpisodePlayed = lastEpisodePlayed;
+	}
 }

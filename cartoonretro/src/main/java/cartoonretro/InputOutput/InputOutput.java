@@ -1,9 +1,13 @@
 package cartoonretro.InputOutput;
 
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 import cartoonretro.model.Episode;
 import cartoonretro.model.Series;
@@ -30,5 +34,21 @@ public class InputOutput {
 			e.printStackTrace();
 		}
 	}
+	
+	public static void printScheduleToFile(Map<LocalDateTime, Episode> schedule) {
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+		try (PrintWriter writer = new PrintWriter(new FileWriter("Schedule.txt"))) {
+            for (Map.Entry<LocalDateTime, Episode> entry : schedule.entrySet()) {
+                LocalDateTime airDateTime = entry.getKey();
+                Episode episode = entry.getValue();
+
+                String formattedDateTime = airDateTime.format(formatter);
+                writer.write(formattedDateTime + "\t" + episode.getNameOfSerie() + "\t" + episode.getSeasonNumber() + "\t" + episode.getEpisodeNumber() + "\t" + episode.getNameOfEpisode() + "\n");
+            }
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 
 }

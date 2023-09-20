@@ -4,12 +4,15 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 
 import cartoonretro.model.Database;
 import cartoonretro.model.Episode;
+import cartoonretro.model.Schedule;
 import cartoonretro.model.Series;
 import cartoonretro.obs.OBSController;
 import cartoonretro.twitch.TwitchAPI;
@@ -62,26 +65,6 @@ public class FromDBToTwitch {
 		//ChatGPT
 		//chatGPTClient = new ChatGPTClient(chatGPTApiKey);
 
-		/*for(Series series : seriesList) {
-			if(series.getNameOfSerie().toLowerCase().equals("Doraemon (2005)")) {
-				for(Episode episode : series.getEpisodes()) {
-					if(episode.getNameOfEpisode().toLowerCase().equals("Pintando el mundo ┃ El día libre de Doraemon")) {
-						vlcController.playVideo(series.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
-
-						//Calculate aspect ratio
-						String aspectRatio = calculateAspectRatio(episode.getWidth(), episode.getHeight());
-						obsController.setScene("Series"+ aspectRatio);
-
-						try {
-							Thread.sleep(episode.getDurationSeconds()*1000);
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-						}
-					}
-				}
-			}
-		}*/
-
 		//Test
 		//playEpisodeFromFileNameAndSerie("Doraemon (2005)", "Pesca de andar por casa");
 		//playEpisodeFromFileNameAndSerie("Dragon Ball GT", "El regreso de Goku. La ira del guerrero Oob");//1440x1080 (4:3)
@@ -95,17 +78,23 @@ public class FromDBToTwitch {
 		//playEpisodeFromFileNameAndSerie("Ben 10 Ultimate (2010)", "020~~001.avi");//720x576 (casi 4:3)
 		//playEpisodeFromFileNameAndSerie("El Chicho Terremoto", "038~Chicho Contra Todo.avi");//384x288 (4:3)
 
-		// 5 year schedule
+		// 5 year schedule (BAD, DELETE THIS XD)
 		/*for(int day=1; day<1825; day++) {
 			double totalDuration = 0.0;
 			for(Series series:seriesList) {
-				for(Episode episode:series.getEpisodes()) {
-					
-				}
+				Optional<Episode> foundEpisode = series.getEpisodes().stream().filter(e -> e.getPlayOrder()==1).findFirst();
+		        if (foundEpisode.isPresent()) {
+		            Episode episode = foundEpisode.get();
+		            System.out.println("Found episode: " + episode.getNameOfEpisode());
+		            // Do something with the found episode
+		        } else {
+		            System.out.println("Episode not found with playOrder: " + nameToFind);
+		        }
 			}
 		}*/
-		
-		
+
+        LocalDateTime currentDateTime = LocalDateTime.of(2023, 9, 21, 0, 0); // Start at September 21, midnight
+        Map<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(currentDateTime, seriesList);
 	}
 
 	/**

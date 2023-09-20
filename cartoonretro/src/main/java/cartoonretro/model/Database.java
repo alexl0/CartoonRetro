@@ -19,7 +19,8 @@ public class Database {
 		try (Connection connection = DriverManager.getConnection(DATABASE_URL)) {
 			String createSeriesTableSQL = "CREATE TABLE IF NOT EXISTS series (" +
 					"name_of_serie TEXT PRIMARY KEY NOT NULL, " +
-					"path TEXT NOT NULL)";
+					"path TEXT NOT NULL, "+
+					"popularity INT)";
 
 			String createEpisodesTableSQL = "CREATE TABLE IF NOT EXISTS episodes (" +
 					"id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -96,6 +97,7 @@ public class Database {
 				Series series = new Series();
 				series.setNameOfSerie(resultSet.getString("name_of_serie"));
 				series.setPath(resultSet.getString("path"));
+				series.setPopularity(resultSet.getInt("popularity"));
 				series.setEpisodes(retrieveEpisodesForSeries(series.getNameOfSerie()));
 				seriesList.add(series);
 			}
