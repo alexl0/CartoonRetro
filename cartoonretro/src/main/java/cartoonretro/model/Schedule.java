@@ -1,7 +1,9 @@
 package cartoonretro.model;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +13,7 @@ import java.util.TreeMap;
 import cartoonretro.InputOutput.InputOutput;
 
 import java.time.Duration;
+import java.time.LocalDate;
 
 public class Schedule {
 
@@ -26,12 +29,13 @@ public class Schedule {
 	 */
 	public static Map<LocalDateTime, Episode> createYearlySchedule(LocalDateTime startDateTime, List<Series> seriesList) {
 		schedule = new TreeMap<>();
+		LocalDateTime currentDateTime = startDateTime;
 
 		for( int day=1; day<365; day++) {
 			// Seconds of the day (cannot play more than that in a day xD)
 			int maxDuration = 24*60*60;
 			int totalDuration = 0;
-			
+
 			// Calculate what NEW episodes to be played
 			for (Series series : seriesList) {
 				// Find what episode comes next
@@ -48,26 +52,54 @@ public class Schedule {
 					Episode episode = foundEpisode.get();
 					series.setLastEpisodePlayed(episode);
 
-					// Calculate the air date and time for the episode
-					LocalDateTime airDateTime = startDateTime;
-					Duration episodeDuration = Duration.ofSeconds(episode.getDurationSeconds());
-					totalDuration+=episodeDuration.getSeconds();
-
 					// Associate the episode with the air date and time in the schedule
-					schedule.put(airDateTime, episode);
-
+					schedule.put(currentDateTime, episode);
 					// Increment the current date and time by the episode's duration
-					startDateTime = startDateTime.plus(episodeDuration);
+					currentDateTime = currentDateTime.plus(Duration.ofSeconds(episode.getDurationSeconds()));
+					totalDuration+=episode.getDurationSeconds();
 				} else {
 					System.out.println("Episode not found with playOrder: " + playOrderOfEpisodeToBePlayed);
 				}
 			}
-			
+
+			List<Episode> episodesFromDay = getEpisodesFromDay(currentDateTime.toLocalDate());
+
 			// Fill remaining time of the day with REPEATED episodes
-			
+			boolean canPutMoreEpisodes = true;
+			while(canPutMoreEpisodes) {
+				canPutMoreEpisodes = false;
+				for(Episode e : episodesFromDay) {
+					if(e.getDurationSeconds()+totalDuration<maxDuration) {
+						schedule.put(currentDateTime, e);
+						currentDateTime = currentDateTime.plus(Duration.ofSeconds(e.getDurationSeconds()));
+						totalDuration+=e.getDurationSeconds();
+						canPutMoreEpisodes = true;
+					}
+				}
+			}
+
+
+
 		}
 		InputOutput.printScheduleToFile(schedule);
 		return schedule;
+	}
+
+	private static List<Episode> getEpisodesFromDay(LocalDate targetDate) {
+		// Define the start and end LocalDateTime instances for the target day
+		LocalDateTime startOfDay = targetDate.atStartOfDay();
+		LocalDateTime endOfDay = targetDate.atTime(23, 59, 59);
+		// Retrieve episodes scheduled for the target day
+		List<Episode> episodesFromDay = new ArrayList<>();
+
+		for (Map.Entry<LocalDateTime, Episode> entry : schedule.entrySet()) {
+			LocalDateTime airDateTime = entry.getKey();
+
+			if (!airDateTime.isBefore(startOfDay) && !airDateTime.isAfter(endOfDay)) {
+				episodesFromDay.add(entry.getValue());
+			}
+		}
+		return episodesFromDay;
 	}
 
 
