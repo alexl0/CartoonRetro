@@ -35,9 +35,9 @@ public class InputOutput {
 		}
 	}
 	
-	public static void printScheduleToFile(Map<LocalDateTime, Episode> schedule) {
+	public static void printScheduleToFile(Map<LocalDateTime, Episode> schedule, String nameOfFile) {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-		try (PrintWriter writer = new PrintWriter(new FileWriter("Schedule.txt"))) {
+		try (PrintWriter writer = new PrintWriter(new FileWriter(nameOfFile))) {
             for (Map.Entry<LocalDateTime, Episode> entry : schedule.entrySet()) {
                 LocalDateTime airDateTime = entry.getKey();
                 Episode episode = entry.getValue();

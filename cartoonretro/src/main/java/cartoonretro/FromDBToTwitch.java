@@ -68,9 +68,11 @@ public class FromDBToTwitch {
 		//ChatGPT
 		//chatGPTClient = new ChatGPTClient(chatGPTApiKey);
 
-		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2023, 9, 21, 0, 0), seriesList);
+		//TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2023, 9, 21, 0, 0), seriesList);
 
-		playSchedule(yearlySchedule);
+		TreeMap<LocalDateTime, Episode> shortSchedule = Schedule.createTestSchedule(seriesList);
+
+		playSchedule(shortSchedule);
 
 
 
@@ -93,37 +95,50 @@ public class FromDBToTwitch {
 	private static void playSchedule(TreeMap<LocalDateTime, Episode> yearlySchedule) {
 		while(true) {
 			Map.Entry<LocalDateTime, Episode> entry = yearlySchedule.floorEntry(LocalDateTime.now());
-			long delayFromPreviousEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entry.getKey()));
-			// If we go 2 minutes later or more, we wait until the next episode
-			if(delayFromPreviousEpisode>60*2) {
-				Map.Entry<LocalDateTime, Episode> entryNext = yearlySchedule.ceilingEntry(LocalDateTime.now());
-				long delayToNextEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entryNext.getKey()));
-				if (delayToNextEpisode > 0) {
+			// If the first date on the schedule has not arrived yet, we need to wait
+			if(entry == null) {
+				long timeToStart = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), yearlySchedule.firstKey()));
+				try {
+					System.out.println("The schedule has not started yet. First episode(" + yearlySchedule.firstEntry().getValue().getNameOfSerie() + ") starts " + yearlySchedule.firstKey().toLocalDate() + " at " + yearlySchedule.firstKey().toLocalTime() + ". Time remaining: " + timeToStart + " seconds.");
+					TimeUnit.SECONDS.sleep(timeToStart+1);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			}
+			else {
+				long delayFromPreviousEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entry.getKey()));
+				// If we go 2 minutes later or more, we wait until the next episode
+				if(delayFromPreviousEpisode>60*2) {
+					Map.Entry<LocalDateTime, Episode> entryNext = yearlySchedule.ceilingEntry(LocalDateTime.now());
+					long delayToNextEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entryNext.getKey()));
+					if (delayToNextEpisode > 0) {
+						try {
+							// Sleep to wait until the scheduled time
+							System.out.println("We were " + delayFromPreviousEpisode/60 + " minutes delayed to play the last episode (" + entry.getValue().getNameOfSerie() + "). We were not able to start playing it at " + entry.getKey().toLocalTime() + ", so we're waiting for the next one (" + entryNext.getValue().getNameOfSerie() + ") to be played at " + entryNext.getKey().toLocalTime() + ". " + delayToNextEpisode/60 + " minutes remaining");
+							TimeUnit.SECONDS.sleep(delayToNextEpisode);
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+						}
+					}
+				}
+				// If not, we play it
+				else {
+					Episode episodeToPlay = yearlySchedule.floorEntry(LocalDateTime.now()).getValue();
+					playEpisode(episodeToPlay);
+					// Calculate the time until the next hour
+					LocalDateTime currentDateTime = LocalDateTime.now();
+					LocalDateTime nextDateTime = currentDateTime.plusSeconds(episodeToPlay.getDurationSeconds());
+					long delaySeconds = ChronoUnit.SECONDS.between(currentDateTime, nextDateTime) + 1;
+					System.out.println("Playing: " + episodeToPlay.getNameOfSerie() + ", Episode: " + episodeToPlay.getEpisodeNumber() + ", Season: " + episodeToPlay.getSeasonNumber());
 					try {
-						// Sleep to wait until the scheduled time
-						System.out.println("We were " + delayFromPreviousEpisode/60 + " minutes delayed to play the last episode (" + entry.getValue().getNameOfSerie() + "). We were not able to start playing it at " + entry.getKey().toLocalTime() + ", so we're waiting for the next one (" + entryNext.getValue().getNameOfSerie() + ") to be played at " + entryNext.getKey().toLocalTime() + ". " + delayToNextEpisode/60 + " minutes remaining");
-						TimeUnit.SECONDS.sleep(delayToNextEpisode);
+						// Sleep to wait until the next episode
+						TimeUnit.SECONDS.sleep(delaySeconds);
 					} catch (InterruptedException e) {
 						Thread.currentThread().interrupt();
 					}
 				}
 			}
-			// If not, we play it
-			else {
-				Episode episodeToPlay = yearlySchedule.floorEntry(LocalDateTime.now()).getValue();
-				playEpisode(episodeToPlay);
-				// Calculate the time until the next hour
-				LocalDateTime currentDateTime = LocalDateTime.now();
-				LocalDateTime nextDateTime = currentDateTime.plusSeconds(episodeToPlay.getDurationSeconds());
-				long delaySeconds = ChronoUnit.SECONDS.between(currentDateTime, nextDateTime) + 1;
 
-				try {
-					// Sleep to wait until the next episode
-					TimeUnit.SECONDS.sleep(delaySeconds);
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-				}
-			}
 		}
 	}
 
@@ -155,10 +170,12 @@ public class FromDBToTwitch {
 		Optional<Series> searchSerie = seriesList.stream().filter(series -> series.getNameOfSerie().equals(episode.getNameOfSerie())).findFirst();
 		if (searchSerie.isPresent()) {
 			Series foundSeries = searchSerie.get();
-			vlcController.playEpisode(foundSeries.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
+
 			//Calculate aspect ratio
 			String aspectRatio = calculateAspectRatio(episode.getWidth(), episode.getHeight());
 			obsController.setScene("Series"+ aspectRatio);
+
+			vlcController.playEpisode(foundSeries.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
 		} else {
 			System.out.println("Series not found");
 		}

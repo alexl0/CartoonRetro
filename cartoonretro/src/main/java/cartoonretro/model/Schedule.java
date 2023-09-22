@@ -78,10 +78,41 @@ public class Schedule {
 				}
 			}
 		}
-		InputOutput.printScheduleToFile(schedule);
+		InputOutput.printScheduleToFile(schedule, "Schedule.txt");
 		return schedule;
 	}
 
+	/**
+	 * Schedules short episodes (0 Season of The Simpsons) to start the next minute.
+	 * (They are not in order).
+	 * This method is a variant of createYearlySchedule
+	 * @param startDateTime
+	 * @param seriesList
+	 * @return
+	 */
+	public static TreeMap<LocalDateTime, Episode> createTestSchedule(List<Series> seriesList) {
+		TreeMap<LocalDateTime, Episode> shortSchedule = new TreeMap<>();
+		LocalDateTime startDate = LocalDateTime.now().plusSeconds(15);
+
+			Series simpsonSeries = seriesList.stream().filter(s -> s.getNameOfSerie().equals("Los Simpson")).findFirst().get();
+			List<Episode> firstSeason = simpsonSeries.getEpisodes().stream().filter(e -> e.getSeasonNumber()==0).toList();
+
+			for(Episode e: firstSeason) {
+				// Associate the episode with the air date and time in the schedule
+				shortSchedule.put(startDate, e);
+				// Increment the current date and time by the episode's duration
+				startDate = startDate.plus(Duration.ofSeconds(e.getDurationSeconds()));
+			}
+
+		InputOutput.printScheduleToFile(shortSchedule, "ScheduleSimpson0Season");
+		return shortSchedule;
+	}
+
+	/**
+	 * Auxiliar method
+	 * @param targetDate
+	 * @return
+	 */
 	private static List<Episode> getEpisodesFromDay(LocalDate targetDate) {
 		// Define the start and end LocalDateTime instances for the target day
 		LocalDateTime startOfDay = targetDate.atStartOfDay();

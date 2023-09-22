@@ -33,7 +33,7 @@ public class VLCController {
 				@Override
 				public void finished(MediaPlayer mediaPlayer) {
 					// This method is called when playback reaches the end of the media
-					System.out.println("Video playback finished");
+					System.out.println("Video: " + path + " playback finished");
 
                     // Dispose of the media player component
                     //mediaPlayerComponent.release();
