@@ -17,7 +17,7 @@ import java.time.LocalDate;
 
 public class Schedule {
 
-	static Map<LocalDateTime, Episode> schedule;
+	private static TreeMap<LocalDateTime, Episode> schedule;
 
 	/**
 	 * Para cada serie, coje el episodio siguiente
@@ -27,7 +27,7 @@ public class Schedule {
 	 * @param seriesList Lista con todas las series
 	 * @return
 	 */
-	public static Map<LocalDateTime, Episode> createYearlySchedule(LocalDateTime startDateTime, List<Series> seriesList) {
+	public static TreeMap<LocalDateTime, Episode> createYearlySchedule(LocalDateTime startDateTime, List<Series> seriesList) {
 		schedule = new TreeMap<>();
 		LocalDateTime currentDateTime = startDateTime;
 
@@ -62,9 +62,9 @@ public class Schedule {
 				}
 			}
 
+			// Fill remaining time of the day with REPEATED episodes
 			List<Episode> episodesFromDay = getEpisodesFromDay(currentDateTime.toLocalDate());
 
-			// Fill remaining time of the day with REPEATED episodes
 			boolean canPutMoreEpisodes = true;
 			while(canPutMoreEpisodes) {
 				canPutMoreEpisodes = false;
@@ -77,9 +77,6 @@ public class Schedule {
 					}
 				}
 			}
-
-
-
 		}
 		InputOutput.printScheduleToFile(schedule);
 		return schedule;

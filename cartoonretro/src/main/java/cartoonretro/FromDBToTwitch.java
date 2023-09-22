@@ -5,10 +5,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import cartoonretro.model.Database;
 import cartoonretro.model.Episode;
@@ -65,36 +68,63 @@ public class FromDBToTwitch {
 		//ChatGPT
 		//chatGPTClient = new ChatGPTClient(chatGPTApiKey);
 
+		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2023, 9, 21, 0, 0), seriesList);
+
+		playSchedule(yearlySchedule);
+
+
+
 		//Test
 		//playEpisodeFromFileNameAndSerie("Doraemon (2005)", "Pesca de andar por casa");
 		//playEpisodeFromFileNameAndSerie("Dragon Ball GT", "El regreso de Goku. La ira del guerrero Oob");//1440x1080 (4:3)
 		//playEpisodeFromFileNameAndSerie("Pokémon", "027~~019~XYZ.mkv");//1280x720 (16:9)
 		//playEpisodeFromFileNameAndSerie("Pokémon", "039~~019~XYZ.mkv");//1280x6.. (casi 16:9)
 		//playEpisodeFromFileNameAndSerie("Pokémon", "032~~018~XY - Expediciones en Kalos.mkv");//1024x576 (16:9)
-		playEpisodeFromFileNameAndSerie("Ben 10 (2016)", "021~La niebla del páramo~003.mkv");//960x540 (16:9)
+		//playEpisodeFromFileNameAndSerie("Ben 10 (2016)", "021~La niebla del páramo~003.mkv");//960x540 (16:9)
 		//playEpisodeFromFileNameAndSerie("Ben 10 Alien Force(2008)", "013~~001.avi");//960x720 (4:3) //TODO bordes negros que te cagas en esos episodios (culpa del vídeo)
 		//playEpisodeFromFileNameAndSerie("Ben 10 Alien Force(2008)", "001~~001.AVI");//720x540 (4:3)
 		//playEpisodeFromFileNameAndSerie("Ben 10 Serie original (2005)", "008~~001.avi");//720x544 (casi 4:3)
 		//playEpisodeFromFileNameAndSerie("Ben 10 Ultimate (2010)", "020~~001.avi");//720x576 (casi 4:3)
 		//playEpisodeFromFileNameAndSerie("El Chicho Terremoto", "038~Chicho Contra Todo.avi");//384x288 (4:3)
+		//playEpisodeFromFileNameAndSerie("Los Simpson", "001~Buenas Noches~000.mkv");
 
-		// 5 year schedule (BAD, DELETE THIS XD)
-		/*for(int day=1; day<1825; day++) {
-			double totalDuration = 0.0;
-			for(Series series:seriesList) {
-				Optional<Episode> foundEpisode = series.getEpisodes().stream().filter(e -> e.getPlayOrder()==1).findFirst();
-		        if (foundEpisode.isPresent()) {
-		            Episode episode = foundEpisode.get();
-		            System.out.println("Found episode: " + episode.getNameOfEpisode());
-		            // Do something with the found episode
-		        } else {
-		            System.out.println("Episode not found with playOrder: " + nameToFind);
-		        }
+	}
+
+	private static void playSchedule(TreeMap<LocalDateTime, Episode> yearlySchedule) {
+		while(true) {
+			Map.Entry<LocalDateTime, Episode> entry = yearlySchedule.floorEntry(LocalDateTime.now());
+			long delayFromPreviousEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entry.getKey()));
+			// If we go 2 minutes later or more, we wait until the next episode
+			if(delayFromPreviousEpisode>60*2) {
+				Map.Entry<LocalDateTime, Episode> entryNext = yearlySchedule.ceilingEntry(LocalDateTime.now());
+				long delayToNextEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entryNext.getKey()));
+				if (delayToNextEpisode > 0) {
+					try {
+						// Sleep to wait until the scheduled time
+						System.out.println("We were " + delayFromPreviousEpisode/60 + " minutes delayed to play the last episode (" + entry.getValue().getNameOfSerie() + "). We were not able to start playing it at " + entry.getKey().toLocalTime() + ", so we're waiting for the next one (" + entryNext.getValue().getNameOfSerie() + ") to be played at " + entryNext.getKey().toLocalTime() + ". " + delayToNextEpisode/60 + " minutes remaining");
+						TimeUnit.SECONDS.sleep(delayToNextEpisode);
+					} catch (InterruptedException e) {
+						Thread.currentThread().interrupt();
+					}
+				}
 			}
-		}*/
+			// If not, we play it
+			else {
+				Episode episodeToPlay = yearlySchedule.floorEntry(LocalDateTime.now()).getValue();
+				playEpisode(episodeToPlay);
+				// Calculate the time until the next hour
+				LocalDateTime currentDateTime = LocalDateTime.now();
+				LocalDateTime nextDateTime = currentDateTime.plusSeconds(episodeToPlay.getDurationSeconds());
+				long delaySeconds = ChronoUnit.SECONDS.between(currentDateTime, nextDateTime) + 1;
 
-        LocalDateTime currentDateTime = LocalDateTime.of(2023, 9, 21, 0, 0); // Start at September 21, midnight
-        Map<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(currentDateTime, seriesList);
+				try {
+					// Sleep to wait until the next episode
+					TimeUnit.SECONDS.sleep(delaySeconds);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+			}
+		}
 	}
 
 	/**
@@ -116,6 +146,19 @@ public class FromDBToTwitch {
 			} else {
 				System.out.println("Episode not found");
 			}
+		} else {
+			System.out.println("Series not found");
+		}
+	}
+
+	private static void playEpisode(Episode episode) {
+		Optional<Series> searchSerie = seriesList.stream().filter(series -> series.getNameOfSerie().equals(episode.getNameOfSerie())).findFirst();
+		if (searchSerie.isPresent()) {
+			Series foundSeries = searchSerie.get();
+			vlcController.playEpisode(foundSeries.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
+			//Calculate aspect ratio
+			String aspectRatio = calculateAspectRatio(episode.getWidth(), episode.getHeight());
+			obsController.setScene("Series"+ aspectRatio);
 		} else {
 			System.out.println("Series not found");
 		}

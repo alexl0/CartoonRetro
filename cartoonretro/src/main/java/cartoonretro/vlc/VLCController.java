@@ -35,6 +35,12 @@ public class VLCController {
 					// This method is called when playback reaches the end of the media
 					System.out.println("Video playback finished");
 
+                    // Dispose of the media player component
+                    //mediaPlayerComponent.release();
+
+                    // Close the JFrame
+                    frame.dispose(); //We cannot do this because it closes itself forever and stops the program
+					
 					// Add your code to handle what happens after the video ends
 					// For example, you can close the video window or play the next episode
 				}
