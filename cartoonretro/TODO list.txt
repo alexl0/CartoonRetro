@@ -19,3 +19,37 @@ resoluciones probadas:
 	960x720		bien
 	720x540		bien 
 	720x544		
+	
+	
+	
+	
+comprimir archivos, como digimon, no puede ser que un vídeo de 20 minutos con calidad de mierda ocupe 620mb
+
+
+
+
+TODO
+mirar aver por que las series no tienen todos los días los mismos horarios xD
+
+
+mirar aver por qué cuando es automático no se cambia al 4:3 y al 16:9 ese (o bueno, igual es solamente cosa del episodio de los simpsons)
+	confirmado, no es problema del episodio de los simpsons. cuando lo ejecuto con  la prueba se pone a 4:3 automaticamente.
+	el primero se muestra  perfectamente, pero me parece que en cuanto pasa al segundo ya no va
+	el segundo episodio de agallas ( al menos esos xD) traen bordes negros derecha e izquierda.
+
+
+ya cambia bien de escena, pero es una gitanada andar con el connect, hay que dejar bien la clase OBSController por que hay cosas raras ahí 
+que si reconnect que si onsecond connection que si su puta madre xD.
+
+
+pal video de youtube: https://www.youtube.com/watch?v=dP3PE64gVTg (the other promise part)
+
+En 2023 los científicos siguen creyendo que el sida es una enfermedad que se contagia por el contacto físico.
+Aún no han visto mis vídeos.
+
+Poner al final:
+Atención, las dosis de subnormalidad presentes en este vídeo, exceden el límite diario recomendado por la organización mundial de la salud.
+	Y por qué lo pones al final? Precisamente por eso, por que este vídeo es una puta mierda xD. Si lo hubiera puesto al principio, al menos tendría algo bien.
+
+
+ahora falta poner las letritas en el obs de los episodios y listo. Y bueno luego ya con tiempo los comandos, chatbot gpt etc. votaciones y tal, pero eso luego.

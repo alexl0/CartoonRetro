@@ -3,12 +3,14 @@ package cartoonretro.model;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import cartoonretro.InputOutput.InputOutput;
 
@@ -77,8 +79,10 @@ public class Schedule {
 					}
 				}
 			}
+			// Wait until the next day
+			currentDateTime = currentDateTime.plusDays(1).with(LocalTime.MIDNIGHT);
 		}
-		InputOutput.printScheduleToFile(schedule, "Schedule.txt");
+		InputOutput.printScheduleToFile(schedule, "Schedule2.txt");
 		return schedule;
 	}
 
