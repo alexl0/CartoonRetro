@@ -33,6 +33,7 @@ public class FromDBToTwitch {
 	private static String chatGPTApiKey;
 	private static String twitchStreamKey;
 	private static String obsWebSocketPass;
+	private static String obsWebSocketIp = "192.168.1.3";
 
 	private static OBSController obsController;
 	private static VLCController vlcController;
@@ -56,7 +57,7 @@ public class FromDBToTwitch {
 
 
 		//OBS
-		obsController = new OBSController(obsWebSocketPass);
+		obsController = new OBSController(obsWebSocketPass, obsWebSocketIp);
 		obsController.connect();
 
 		//VLC
@@ -173,6 +174,7 @@ public class FromDBToTwitch {
 
 			//Calculate aspect ratio
 			String aspectRatio = calculateAspectRatio(episode.getWidth(), episode.getHeight());
+			obsController.connect();;
 			obsController.setScene("Series"+ aspectRatio);
 
 			vlcController.playEpisode(foundSeries.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());

@@ -9,19 +9,21 @@ public class OBSController {
 	private OBSRemoteController obsRemoteController;
 	private boolean isReconnecting = false;
 	private static String obsWebSocketPass;
+	private static String obsWebSocketIp;
 
 
-	public OBSController(String obsWebSocketPass) {
+	public OBSController(String obsWebSocketPass, String obsWebSocketIp) {
 		OBSController.obsWebSocketPass = obsWebSocketPass;
+		OBSController.obsWebSocketIp = obsWebSocketIp;
 		createOBSRemoteController();
 	}
 
 	private void createOBSRemoteController() {
 		// Create OBSRemoteController through its builder
 		this.obsRemoteController = OBSRemoteController.builder()
-				.autoConnect(false)                       // Do not connect automatically
+				.autoConnect(true)                       // Do not connect automatically
 				//YOU SHOULD SET A STATIC IP ON YOUR COMPUTER, IF NOT, THIS IP VARIES ON THE WEBSOCKET SERVER SETTINGS ON OBS EVERY TIME!!        
-				.host("192.168.1.2")                        // Set the host
+				.host(obsWebSocketIp)                        // Set the host
 				.port(4455)                               // Set the port
 				.password(obsWebSocketPass)                       // Set the password
 				.lifecycle()                              // Add some lifecycle callbacks
@@ -73,8 +75,8 @@ public class OBSController {
 
 			// My testing code
 			//this.obsRemoteController.triggerMediaInputAction("Video640x480", "OBS_WEBSOCKET_MEDIA_INPUT_ACTION_PLAY", 1000);
-			
-			
+
+
 			this.disconnectAndReconnect();
 		});
 	}
@@ -89,7 +91,8 @@ public class OBSController {
 						} else {
 							System.out.println("Studio mode not enabled");
 						}
-					}
+					} else
+						System.out.println(requestResponse.getMessageData());
 
 					try {
 						Thread.sleep(1000);

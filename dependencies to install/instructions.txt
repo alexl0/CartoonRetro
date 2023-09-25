@@ -1,1 +1,11 @@
 You need to install the MediaInfo_CLI_23.07_Windows_x64\MediaInfo.exe file to the PATH
+(Open windows 10 search and type: path)
+Enter "System Properties"
+Enter "Environment variables"
+Open System Path
+Add a new line, with the path to MediaInfo.exe, for example:
+	"C:\git\CartoonRetro\dependencies to install\MediaInfo_CLI_23.07_Windows_x64"
+
+
+Also install MKVTookNix and add it to the path too
+https://mkvtoolnix.download/downloads.html#windows
