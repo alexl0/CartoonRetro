@@ -12,11 +12,20 @@ import java.awt.*;
 
 public class VLCController {
 
+	String[] args = {
+		    "--video-filter", 
+		    "transform",
+		    "--transform-type",
+		    "hflip",
+		    "--blur-factor",
+		    "127"
+		};
+	
 	public void playEpisode(String path, int episodeWidth, int episodeHeight) {
 		SwingUtilities.invokeLater(() -> {
 
 			// Create the media player component
-			EmbeddedMediaPlayerComponent mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
+			EmbeddedMediaPlayerComponent mediaPlayerComponent = new EmbeddedMediaPlayerComponent(args);
 
 			// Create the JFrame to display the video
 			JFrame frame = new JFrame("VLCJ Video Player");
