@@ -30,6 +30,7 @@ comprimir archivos, como digimon, no puede ser que un vídeo de 20 minutos con c
 
 TODO
 mirar aver por que las series no tienen todos los días los mismos horarios xD
+	hecho y solucionado
 
 
 mirar aver por qué cuando es automático no se cambia al 4:3 y al 16:9 ese (o bueno, igual es solamente cosa del episodio de los simpsons)
@@ -53,3 +54,20 @@ Atención, las dosis de subnormalidad presentes en este vídeo, exceden el lími
 
 
 ahora falta poner las letritas en el obs de los episodios y listo. Y bueno luego ya con tiempo los comandos, chatbot gpt etc. votaciones y tal, pero eso luego.
+
+arreglar el puto logger xd (y hacer que logee menos, que logea mucho xD.
+
+probar el caso de cuando se llega al final del día y no hay episodios que mostrar.
+
+El primer episodio que se ejecuta se ve bien la relaccion de aspecto pero para TODOS los posteriores ya no se cambia.
+	es por tema de timing, hay que hacer que espere 1 segundo en algun sitio, y luego que no haya problema por que al final del día siempre está unos minutos sin emitir nada y ahí lo recupera
+
+hacer de una vez lo del schedule, ponerlo en el stream de alguna manera. hora y nombre de serie
+	ya se como hacerlo, crear comandos con streambot que modifiquen un texto que aparece en pantalla.
+	y luego desde el java, lanzar esos comandos con una cuenta que sea la única que pueda lanzarlos.
+
+twitch ignorar todos los mensajes que empiecen por # tanto en streamelements como en el propio twitch si se puede
+
+mirar a ver como hacer para que la api de twitch me devuelva a parte del bearer token, un refresh token.
+
+

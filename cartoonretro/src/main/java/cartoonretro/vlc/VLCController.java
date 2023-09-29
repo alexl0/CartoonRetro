@@ -6,8 +6,6 @@ import uk.co.caprica.vlcj.player.component.EmbeddedMediaPlayerComponent;
 
 import javax.swing.*;
 
-import cartoonretro.model.Episode;
-
 import java.awt.*;
 
 public class VLCController {
