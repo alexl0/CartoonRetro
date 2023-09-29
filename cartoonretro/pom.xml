@@ -66,6 +66,14 @@
 	    <artifactId>json</artifactId>
 	    <version>20230618</version>
 	</dependency>
+	<!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-classic -->
+	<dependency>
+	    <groupId>ch.qos.logback</groupId>
+	    <artifactId>logback-classic</artifactId>
+	    <version>1.4.11</version>
+	    <scope>test</scope>
+	</dependency>
+
   </dependencies>
 
   <build>
@@ -78,8 +86,18 @@
         </plugin>
         <!-- default lifecycle, jar packaging: see https://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_jar_packaging -->
         <plugin>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>3.0.2</version>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-resources-plugin</artifactId>
+            <version>3.2.0</version> <!-- Use the latest version -->
+            <executions>
+                <execution>
+                    <id>default-resources</id>
+                    <phase>process-resources</phase>
+                    <goals>
+                        <goal>resources</goal>
+                    </goals>
+                </execution>
+            </executions>
         </plugin>
         <plugin>
           <artifactId>maven-compiler-plugin</artifactId>

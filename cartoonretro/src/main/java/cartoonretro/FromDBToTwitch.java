@@ -11,6 +11,9 @@ import java.util.Properties;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cartoonretro.model.Database;
 import cartoonretro.model.Episode;
 import cartoonretro.model.Schedule;
@@ -48,7 +51,14 @@ public class FromDBToTwitch {
 
 	private static List<Series> seriesList;
 
+	private static final Logger log = LoggerFactory.getLogger(FromDBToTwitch.class);
+
 	public static void main(String[] args) {
+
+		// Manage logs
+		// Load Logback configuration
+        System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
+		log.info("¡Starting CartoonRetro!");
 
 		//Read keys
 		readProperties();
@@ -63,8 +73,8 @@ public class FromDBToTwitch {
 
 
 		//OBS
-		//		obsController = new OBSController(obsWebSocketPass, obsWebSocketIp);
-		//		obsController.connect();
+		obsController = new OBSController(obsWebSocketPass, obsWebSocketIp);
+		obsController.connect();
 
 		//VLC
 		vlcController = new VLCController();
@@ -75,11 +85,11 @@ public class FromDBToTwitch {
 		//ChatGPT
 		//chatGPTClient = new ChatGPTClient(chatGPTApiKey);
 
-		//TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2023, 9, 21, 0, 0), seriesList);
+		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2023, 9, 29, 22, 50), seriesList);
 
-		TreeMap<LocalDateTime, Episode> shortSchedule = Schedule.createTestSchedule(seriesList);
+		//TreeMap<LocalDateTime, Episode> shortSchedule = Schedule.createTestSchedule(seriesList);
 
-		playSchedule(shortSchedule);
+		playSchedule(yearlySchedule);
 
 
 
@@ -182,19 +192,19 @@ public class FromDBToTwitch {
 			// Change stream info
 			List<String> tagsList = new ArrayList<>();
 			if (foundSeries.getNameOfSerie() != null && !foundSeries.getNameOfSerie().isBlank()) {
-			    String sanitizedTag = foundSeries.getNameOfSerie().replaceAll("[^a-zA-Z0-9-_]", "");
-			    if (!sanitizedTag.isBlank())
-			        tagsList.add(sanitizedTag);
+				String sanitizedTag = foundSeries.getNameOfSerie().replaceAll("[^a-zA-Z0-9-_]", "");
+				if (!sanitizedTag.isBlank())
+					tagsList.add(sanitizedTag);
 			}
 			if (episode.getNameOfEpisode() != null && !episode.getNameOfEpisode().isBlank()) {
-			    String sanitizedTag = episode.getNameOfEpisode().replaceAll("[^a-zA-Z0-9-_]", "");
-			    if (!sanitizedTag.isBlank())
-			        tagsList.add(sanitizedTag);
+				String sanitizedTag = episode.getNameOfEpisode().replaceAll("[^a-zA-Z0-9-_]", "");
+				if (!sanitizedTag.isBlank())
+					tagsList.add(sanitizedTag);
 			}
 			if (episode.getSeasonName() != null && !episode.getSeasonName().isBlank()) {
-			    String sanitizedTag = episode.getSeasonName().replaceAll("[^a-zA-Z0-9-_]", "");
-			    if (!sanitizedTag.isBlank())
-			        tagsList.add(sanitizedTag);
+				String sanitizedTag = episode.getSeasonName().replaceAll("[^a-zA-Z0-9-_]", "");
+				if (!sanitizedTag.isBlank())
+					tagsList.add(sanitizedTag);
 			}
 			String[] tags = tagsList.toArray(new String[0]);
 			String title = foundSeries.getNameOfSerie();
@@ -210,10 +220,7 @@ public class FromDBToTwitch {
 
 			// Calculate aspect ratio
 			String aspectRatio = calculateAspectRatio(episode.getWidth(), episode.getHeight());
-			obsController = new OBSController(obsWebSocketPass, obsWebSocketIp);
-			obsController.connect();
 			obsController.setScene("Series"+ aspectRatio);
-			obsController.disconnect();
 
 			// Play the episode
 			vlcController.playEpisode(foundSeries.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());

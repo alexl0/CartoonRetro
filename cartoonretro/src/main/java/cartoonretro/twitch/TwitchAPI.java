@@ -51,8 +51,8 @@ public class TwitchAPI {
 		//Refresh token
 		try {
 			refreshAccessToken();
-			System.out.println("newAccessToken: " + twitchUserAccessToken);
-			System.out.println("newRefreshToken: " + twitchUserRefreshToken);
+			//System.out.println("newAccessToken: " + twitchUserAccessToken);
+			//System.out.println("newRefreshToken: " + twitchUserRefreshToken);
 		} catch (ClientProtocolException e) {
 			System.out.println("TwitchAPI.java: Error refreshing the token.");
 			e.printStackTrace();
@@ -72,7 +72,7 @@ public class TwitchAPI {
 		httpPost.addHeader("Content-Type", "application/x-www-form-urlencoded");
 
 		String encodedRefreshToken = URLEncoder.encode(twitchUserRefreshToken, StandardCharsets.UTF_8.toString());
-		
+
 		// Set form parameters
 		BasicNameValuePair[] params = {
 				new BasicNameValuePair("grant_type", "refresh_token"),
@@ -106,10 +106,10 @@ public class TwitchAPI {
 
 
 	public JSONObject changeStreamInfo(String title, String[] tags) {
-		System.out.println("Changing streaming info: Title: " + title);
+		/*System.out.println("Changing streaming info: Title: " + title);
 		System.out.println("twitchBroadcasterId: " + twitchBroadcasterId);
 		System.out.println("twitchUserAccessToken: " + twitchUserAccessToken);
-		System.out.println("twitchClientId: " + twitchClientId);
+		System.out.println("twitchClientId: " + twitchClientId);*/
 		try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
 			refreshAccessToken();
@@ -131,11 +131,12 @@ public class TwitchAPI {
 			requestBody.put("title", title);
 			requestBody.put("broadcaster_language", "es");
 			requestBody.put("tags", tags);
-			System.out.println("requestBody: " + requestBody.toString());
 
 			StringEntity entity = new StringEntity(requestBody.toString());
-			System.out.println("entity: " + entity.toString());
 			httpPatch.setEntity(entity);
+
+			//System.out.println("requestBody: " + requestBody.toString());
+			//System.out.println("entity: " + entity.toString());
 
 			HttpResponse response = httpClient.execute(httpPatch);
 			HttpEntity responseEntity = response.getEntity();
