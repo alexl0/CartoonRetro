@@ -26,3 +26,7 @@ PASSWORDS.properties
 SeriesAndEpisodesList.txt
 SeriesAndEpisodesListDB.txt
 SeriesAndEpisodesListRoute.txt
+
+obtainOauth.txt
+
+twitchCredentials

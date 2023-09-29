@@ -1,11 +1,9 @@
 package cartoonretro;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,7 +19,7 @@ import cartoonretro.obs.OBSController;
 import cartoonretro.twitch.TwitchAPI;
 import cartoonretro.vlc.VLCController;
 import cartoonretro.InputOutput.InputOutput;
-import cartoonretro.chatbot.ChatGPTClient;
+//import cartoonretro.chatbot.ChatGPTClient;
 
 /**
  * This class reads the video information from db, executes the video and streams to twitch.
@@ -29,16 +27,24 @@ import cartoonretro.chatbot.ChatGPTClient;
  */
 public class FromDBToTwitch {
 
-	// Passwords and api keys
-	private static String chatGPTApiKey;
-	private static String twitchStreamKey;
+	// ChatGPT
+	//private static String chatGPTApiKey;
+
+	// Twitch
+	private static String twitchBroadcasterId;
+	private static String twitchClientId;
+	private static String twitchClientSecret;
+	private static String twitchUserAccessToken;
+	private static String twitchUserRefreshToken;
+
+	// OBS
 	private static String obsWebSocketPass;
 	private static String obsWebSocketIp = "192.168.1.3";
 
 	private static OBSController obsController;
 	private static VLCController vlcController;
 	private static TwitchAPI twitchAPI;
-	private static ChatGPTClient chatGPTClient;
+	//private static ChatGPTClient chatGPTClient;
 
 	private static List<Series> seriesList;
 
@@ -57,14 +63,14 @@ public class FromDBToTwitch {
 
 
 		//OBS
-		obsController = new OBSController(obsWebSocketPass, obsWebSocketIp);
-		obsController.connect();
+		//		obsController = new OBSController(obsWebSocketPass, obsWebSocketIp);
+		//		obsController.connect();
 
 		//VLC
 		vlcController = new VLCController();
 
 		//Twitch
-		//twitchAPI = new TwitchAPI(twitchStreamKey);
+		twitchAPI = new TwitchAPI(twitchBroadcasterId, twitchClientId, twitchClientSecret, twitchUserAccessToken, twitchUserRefreshToken);
 
 		//ChatGPT
 		//chatGPTClient = new ChatGPTClient(chatGPTApiKey);
@@ -148,6 +154,7 @@ public class FromDBToTwitch {
 	 * @param seriesName
 	 * @param episodeName
 	 */
+	@SuppressWarnings("unused")
 	private static void playEpisodeFromFileNameAndSerie(String seriesName, String fileName) {
 		Optional<Series> searchSerie = seriesList.stream().filter(series -> series.getNameOfSerie().equals(seriesName)).findFirst();
 		if (searchSerie.isPresent()) {
@@ -172,11 +179,43 @@ public class FromDBToTwitch {
 		if (searchSerie.isPresent()) {
 			Series foundSeries = searchSerie.get();
 
-			//Calculate aspect ratio
-			String aspectRatio = calculateAspectRatio(episode.getWidth(), episode.getHeight());
-			obsController.connect();;
-			obsController.setScene("Series"+ aspectRatio);
+			// Change stream info
+			List<String> tagsList = new ArrayList<>();
+			if (foundSeries.getNameOfSerie() != null && !foundSeries.getNameOfSerie().isBlank()) {
+			    String sanitizedTag = foundSeries.getNameOfSerie().replaceAll("[^a-zA-Z0-9-_]", "");
+			    if (!sanitizedTag.isBlank())
+			        tagsList.add(sanitizedTag);
+			}
+			if (episode.getNameOfEpisode() != null && !episode.getNameOfEpisode().isBlank()) {
+			    String sanitizedTag = episode.getNameOfEpisode().replaceAll("[^a-zA-Z0-9-_]", "");
+			    if (!sanitizedTag.isBlank())
+			        tagsList.add(sanitizedTag);
+			}
+			if (episode.getSeasonName() != null && !episode.getSeasonName().isBlank()) {
+			    String sanitizedTag = episode.getSeasonName().replaceAll("[^a-zA-Z0-9-_]", "");
+			    if (!sanitizedTag.isBlank())
+			        tagsList.add(sanitizedTag);
+			}
+			String[] tags = tagsList.toArray(new String[0]);
+			String title = foundSeries.getNameOfSerie();
+			if(episode.getEpisodeNumber()>0)
+				title+= " Ep " + episode.getEpisodeNumber();
+			if(episode.getNameOfEpisode()!=null & !episode.getNameOfEpisode().isBlank())
+				title+= " " + episode.getNameOfEpisode();
+			if(episode.getSeasonNumber()>0)
+				title+= " Temporada " + episode.getSeasonNumber();
+			if(episode.getSeasonName()!=null && !episode.getSeasonName().isBlank())
+				title+= " " + episode.getSeasonName();
+			twitchAPI.changeStreamInfo(title, tags);
 
+			// Calculate aspect ratio
+			String aspectRatio = calculateAspectRatio(episode.getWidth(), episode.getHeight());
+			obsController = new OBSController(obsWebSocketPass, obsWebSocketIp);
+			obsController.connect();
+			obsController.setScene("Series"+ aspectRatio);
+			obsController.disconnect();
+
+			// Play the episode
 			vlcController.playEpisode(foundSeries.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
 		} else {
 			System.out.println("Series not found");
@@ -185,17 +224,16 @@ public class FromDBToTwitch {
 
 	private static void readProperties() {
 		// Read properties
-		Properties properties = new Properties();
-		try (InputStream input = new FileInputStream("src/PASSWORDS.properties")) {
-			properties.load(input);
-		} catch (IOException e) {
-			e.printStackTrace();
-			return;
-		}
+		Properties properties = InputOutput.loadPropertiesFile("src/PASSWORDS.properties");
+
 		// Access the properties using the keys defined in your .properties file
-		chatGPTApiKey = properties.getProperty("chatgpt_api_key");
-		twitchStreamKey = properties.getProperty("twitch_stream_key");
+		//chatGPTApiKey = properties.getProperty("chatgpt_api_key");
 		obsWebSocketPass = properties.getProperty("obs_websocket_pass");
+		twitchBroadcasterId = properties.getProperty("twitch_broadcaster_id");
+		twitchClientId = properties.getProperty("twitch_client_id");
+		twitchClientSecret = properties.getProperty("twitch_client_secret");
+		twitchUserAccessToken = properties.getProperty("twitch_user_access_token");
+		twitchUserRefreshToken = properties.getProperty("twitch_user_refresh_token");
 	}
 
 	public static String calculateAspectRatio(int width, int height) {

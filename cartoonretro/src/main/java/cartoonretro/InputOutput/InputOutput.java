@@ -1,18 +1,37 @@
 package cartoonretro.InputOutput;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
+import java.io.*;
 
 import cartoonretro.model.Episode;
 import cartoonretro.model.Series;
 
 public class InputOutput {
+	
+    // Helper method to load properties from a file
+    public static Properties loadPropertiesFile(String filePath) {
+        Properties properties = new Properties();
+        try (InputStream input = new FileInputStream(filePath)) {
+            properties.load(input);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return properties;
+    }
+
+    // Helper method to save properties to a file
+    public static void savePropertiesFile(String filePath, Properties properties) {
+        try (OutputStream output = new FileOutputStream(filePath)) {
+            properties.store(output, null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+	
 	public static void writeSeriesFileTxt(List<Series> seriesList, double executionTimeMinutes, String medio) {
 		// I print everything to check that everything is alright
 		try (PrintWriter writer = new PrintWriter(new FileWriter("SeriesAndEpisodesList" + medio + ".txt"))) {
