@@ -11,6 +11,7 @@ import java.util.Properties;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,11 +54,10 @@ public class FromDBToTwitch {
 
 	private static final Logger log = LoggerFactory.getLogger(FromDBToTwitch.class);
 
+	static { System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");}
+
 	public static void main(String[] args) {
 
-		// Manage logs
-		// Load Logback configuration
-        System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");
 		log.info("¡Starting CartoonRetro!");
 
 		//Read keys
@@ -85,12 +85,11 @@ public class FromDBToTwitch {
 		//ChatGPT
 		//chatGPTClient = new ChatGPTClient(chatGPTApiKey);
 
-		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2023, 9, 29, 22, 50), seriesList);
+		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2023, 9, 29, 0, 0), seriesList);
 
 		//TreeMap<LocalDateTime, Episode> shortSchedule = Schedule.createTestSchedule(seriesList);
 
 		playSchedule(yearlySchedule);
-
 
 
 		//Test
@@ -125,7 +124,7 @@ public class FromDBToTwitch {
 			else {
 				long delayFromPreviousEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entry.getKey()));
 				// If we go 2 minutes later or more, we wait until the next episode
-				if(delayFromPreviousEpisode>60*2) {
+				if(delayFromPreviousEpisode>60*5) {
 					Map.Entry<LocalDateTime, Episode> entryNext = yearlySchedule.ceilingEntry(LocalDateTime.now());
 					long delayToNextEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entryNext.getKey()));
 					if (delayToNextEpisode > 0) {
@@ -194,18 +193,22 @@ public class FromDBToTwitch {
 			if (foundSeries.getNameOfSerie() != null && !foundSeries.getNameOfSerie().isBlank()) {
 				String sanitizedTag = foundSeries.getNameOfSerie().replaceAll("[^a-zA-Z0-9-_]", "");
 				if (!sanitizedTag.isBlank())
-					tagsList.add(sanitizedTag);
+					tagsList.add(truncateTag(sanitizedTag));
 			}
 			if (episode.getNameOfEpisode() != null && !episode.getNameOfEpisode().isBlank()) {
 				String sanitizedTag = episode.getNameOfEpisode().replaceAll("[^a-zA-Z0-9-_]", "");
 				if (!sanitizedTag.isBlank())
-					tagsList.add(sanitizedTag);
+					tagsList.add(truncateTag(sanitizedTag));
 			}
 			if (episode.getSeasonName() != null && !episode.getSeasonName().isBlank()) {
 				String sanitizedTag = episode.getSeasonName().replaceAll("[^a-zA-Z0-9-_]", "");
 				if (!sanitizedTag.isBlank())
-					tagsList.add(sanitizedTag);
+					tagsList.add(truncateTag(sanitizedTag));
 			}
+			tagsList.add("SeriesAntiguas");
+			tagsList.add("SeriesRetro");
+			tagsList.add("Anime");
+			tagsList.add("Retro");
 			String[] tags = tagsList.toArray(new String[0]);
 			String title = foundSeries.getNameOfSerie();
 			if(episode.getEpisodeNumber()>0)
@@ -216,6 +219,8 @@ public class FromDBToTwitch {
 				title+= " Temporada " + episode.getSeasonNumber();
 			if(episode.getSeasonName()!=null && !episode.getSeasonName().isBlank())
 				title+= " " + episode.getSeasonName();
+			if(title.length()>140)
+				title.substring(0, 140);
 			twitchAPI.changeStreamInfo(title, tags);
 
 			// Calculate aspect ratio
@@ -226,6 +231,15 @@ public class FromDBToTwitch {
 			vlcController.playEpisode(foundSeries.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
 		} else {
 			System.out.println("Series not found");
+		}
+	}
+
+	// Truncate a tag to a maximum of 25 characters
+	private static String truncateTag(String tag) {
+		if (tag.length() <= 25) {
+			return tag;
+		} else {
+			return tag.substring(0, 25);
 		}
 	}
 

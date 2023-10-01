@@ -10,6 +10,17 @@ import java.util.Arrays;
 import java.util.Properties;
 import org.json.JSONObject;
 
+import com.github.philippheuer.credentialmanager.CredentialManager;
+import com.github.philippheuer.credentialmanager.CredentialManagerBuilder;
+import com.github.philippheuer.credentialmanager.domain.OAuth2Credential;
+import com.github.twitch4j.TwitchClient;
+import com.github.twitch4j.TwitchClientBuilder;
+import com.github.twitch4j.auth.providers.TwitchIdentityProvider;
+import com.github.twitch4j.chat.TwitchChat;
+import com.github.twitch4j.chat.TwitchChatBuilder;
+import com.github.twitch4j.helix.TwitchHelix;
+import com.github.twitch4j.helix.TwitchHelixBuilder;
+
 import org.apache.http.HttpEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -33,6 +44,8 @@ public class TwitchAPI {
 	private static String twitchClientSecret;
 	private static String twitchUserAccessToken;
 	private static String twitchUserRefreshToken;
+
+	private final String channelName = "CartoonRetro";
 
 	private static final String BASE_URL = "https://api.twitch.tv/helix";
 
@@ -106,10 +119,10 @@ public class TwitchAPI {
 
 
 	public JSONObject changeStreamInfo(String title, String[] tags) {
-		/*System.out.println("Changing streaming info: Title: " + title);
-		System.out.println("twitchBroadcasterId: " + twitchBroadcasterId);
-		System.out.println("twitchUserAccessToken: " + twitchUserAccessToken);
-		System.out.println("twitchClientId: " + twitchClientId);*/
+		System.out.println("Changing streaming info: Title: " + title);
+		//System.out.println("twitchBroadcasterId: " + twitchBroadcasterId);
+		//System.out.println("twitchUserAccessToken: " + twitchUserAccessToken);
+		//System.out.println("twitchClientId: " + twitchClientId);
 		try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
 
 			refreshAccessToken();
@@ -155,7 +168,23 @@ public class TwitchAPI {
 		return null;
 	}
 
+	public void sendMessage(String message) {
+		OAuth2Credential credential = new OAuth2Credential("twitch", twitchUserAccessToken);
+		// Configure and create a TwitchClient
+		TwitchClient twitchClient = TwitchClientBuilder.builder()
+				.withDefaultAuthToken(credential) // Replace with your bot's username and OAuth token
+				.withEnableHelix(true)
+				.withEnableChat(true)
+				.withChatAccount(credential)
+				//.withChatListener(new YourChatListener()) // Implement your own chat listener
+				.build();
 
+		TwitchChat myChat = twitchClient.getChat();
+		myChat.joinChannel(channelName);
+		myChat.sendMessage(channelName, message);
+
+		//twitchClient.getHelix().sendWhisper(twitchUserAccessToken, twitchBroadcasterId, "803497219", message);
+	}
 
 
 
