@@ -85,12 +85,14 @@ public class FromDBToTwitch {
 		//ChatGPT
 		//chatGPTClient = new ChatGPTClient(chatGPTApiKey);
 
-		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2023, 9, 29, 0, 0), seriesList);
+		//TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2023, 9, 29, 0, 0), seriesList);
 
 		//TreeMap<LocalDateTime, Episode> shortSchedule = Schedule.createTestSchedule(seriesList);
 
-		playSchedule(yearlySchedule);
+		//playSchedule(yearlySchedule);
 
+		// Send whisper to bot
+		twitchAPI.sendWhisper("#plan2 lokoweaaAA22", "961414815");
 
 		//Test
 		//playEpisodeFromFileNameAndSerie("Doraemon (2005)", "Pesca de andar por casa");

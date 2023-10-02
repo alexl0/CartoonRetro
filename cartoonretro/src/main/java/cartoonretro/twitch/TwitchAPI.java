@@ -22,6 +22,7 @@ import com.github.twitch4j.helix.TwitchHelix;
 import com.github.twitch4j.helix.TwitchHelixBuilder;
 
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHeaders;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -31,6 +32,7 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.message.BasicNameValuePair;
 
@@ -184,6 +186,47 @@ public class TwitchAPI {
 		myChat.sendMessage(channelName, message);
 
 		//twitchClient.getHelix().sendWhisper(twitchUserAccessToken, twitchBroadcasterId, "803497219", message);
+	}
+
+	/**
+	 * Con la consola de twitch CLI no funcionan los whispers, asi que lo hago con una peticion http
+	 * @param message
+	 */
+	public void sendWhisper(String message, String broadcasterIdTo) {
+		try {
+			// Create an HttpClient
+			HttpClient httpClient = HttpClients.createDefault();
+
+			// Create an HttpPost request to send the whisper
+			HttpPost httpPost = new HttpPost("https://api.twitch.tv/helix/whispers");
+
+			// Set headers
+			httpPost.setHeader(HttpHeaders.AUTHORIZATION, "Bearer " + twitchUserAccessToken);
+			httpPost.setHeader(HttpHeaders.CONTENT_TYPE, ContentType.APPLICATION_JSON.getMimeType());
+			httpPost.setHeader("Client-Id", twitchClientId);
+
+			// Create the JSON request body
+			JSONObject requestBody = new JSONObject();
+			requestBody.put("from_user_id", twitchBroadcasterId);
+			requestBody.put("to_user_id", broadcasterIdTo);
+			requestBody.put("message", message);
+			StringEntity entity = new StringEntity(requestBody.toString(), ContentType.APPLICATION_JSON);
+			httpPost.setEntity(entity);
+
+			// Execute the POST request
+			HttpResponse response = httpClient.execute(httpPost);
+			HttpEntity responseEntity = response.getEntity();
+
+			if (responseEntity != null) {
+				String responseString = EntityUtils.toString(responseEntity);
+				JSONObject jsonResponse = new JSONObject(responseString);
+
+				if (responseString.toLowerCase().contains("error"))
+					System.err.println("Error message in response: " + jsonResponse.getString("message"));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 
 
