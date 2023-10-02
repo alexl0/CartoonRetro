@@ -293,7 +293,7 @@ public class TwitchAPI {
 		}
 	}
 	// Helper method to extract tokens from the command's output
-	private static String extractToken(String output, String tokenName) {
+	/*private static String extractToken(String output, String tokenName) {
 		int startIndex = output.indexOf(tokenName);
 		if (startIndex == -1) {
 			return null;
@@ -303,7 +303,7 @@ public class TwitchAPI {
 			return null;
 		}
 		return output.substring(startIndex + tokenName.length(), endIndex).trim();
-	}
+	}*/
 
 
 	/* bad methods

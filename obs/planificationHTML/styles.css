@@ -1,0 +1,47 @@
+/* styles.css */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: "Komika Axis Regular", Arial, sans-serif;
+    -webkit-text-stroke: 1px;
+    -webkit-text-stroke-color: black;
+}
+
+.container {
+    width: 250px; /* Set the width of the container */
+    height: 915px; /* Set the height of the container */
+    overflow: hidden;
+    position: relative;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+li {
+    font-size: 14px; /* Set your desired font size */
+    margin-bottom: 0px; /* Adjust as needed */
+    margin-top: 0px; /* Adjust as needed */
+    color: rgb(255, 255, 255);
+    white-space: nowrap; /* Prevent line breaks */
+}
+
+.scrollable {
+    animation: scroll 20s linear infinite alternate; /* Adjust scroll duration as needed */
+    animation-timing-function: linear;
+    animation-play-state: running;
+}
+
+@keyframes scroll {
+    0% {
+        transform: translateX(0%);
+    }
+    50% {
+        transform: translateX(0%);
+    }
+    100% {
+        transform: translateX(-100%);
+    }
+}
