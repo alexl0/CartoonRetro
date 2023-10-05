@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
     let scrollOffset = 0;
     let isScrollingToEnd = true;
     const scrollDuration = 8000; // 8 seconds
-    const pauseDuration = 60000; // 60 seconds
+    const pauseDuration = 10000; // 60 seconds
 
     fetch("your-text-file.txt")
         .then(response => response.text())

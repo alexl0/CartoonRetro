@@ -1,10 +1,14 @@
 package cartoonretro;
 
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
+import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
@@ -85,14 +89,12 @@ public class FromDBToTwitch {
 		//ChatGPT
 		//chatGPTClient = new ChatGPTClient(chatGPTApiKey);
 
-		//TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2023, 9, 29, 0, 0), seriesList);
+		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2023, 9, 29, 0, 0), seriesList);
 
 		//TreeMap<LocalDateTime, Episode> shortSchedule = Schedule.createTestSchedule(seriesList);
 
-		//playSchedule(yearlySchedule);
+		playSchedule(yearlySchedule);
 
-		// Send whisper to bot
-		twitchAPI.sendWhisper("#plan2 lokoweaaAA22", "961414815");
 
 		//Test
 		//playEpisodeFromFileNameAndSerie("Doraemon (2005)", "Pesca de andar por casa");
@@ -108,10 +110,38 @@ public class FromDBToTwitch {
 		//playEpisodeFromFileNameAndSerie("El Chicho Terremoto", "038~Chicho Contra Todo.avi");//384x288 (4:3)
 		//playEpisodeFromFileNameAndSerie("Los Simpson", "001~Buenas Noches~000.mkv");
 
+		// Send whisper to bot
+		//twitchAPI.sendWhisper("#plan2 lokoweaaAA22", "961414815");
+
 	}
 
+	private static boolean schedulePrinted = false;
+	private static LocalDate lastPrintDate = null;
 	private static void playSchedule(TreeMap<LocalDateTime, Episode> yearlySchedule) {
-		while(true) {
+		while(true) { 
+			// First of all, if we hadn't already, populate the txt files that the HTML is going to read
+			if (!schedulePrinted || lastPrintDate.getDayOfYear()!=LocalDate.now().getDayOfYear()) {
+				InputOutput.printScheduleDaysForHTML(yearlySchedule);
+				schedulePrinted = true;
+				lastPrintDate = LocalDate.now();
+
+				// set the obs source properly AND UPDATE IT!!!
+				if(LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("MONDAY"))
+					twitchAPI.sendMessage("!lunes");
+				else if (LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("TUESDAY"))
+					twitchAPI.sendMessage("!martes");
+				else if (LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("WEDNESDAY"))
+					twitchAPI.sendMessage("!miercoles");
+				else if (LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("THURSDAY"))
+					twitchAPI.sendMessage("!jueves");
+				else if (LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("FRIDAY"))
+					twitchAPI.sendMessage("!viernes");
+				else if (LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("SATURDAY"))
+					twitchAPI.sendMessage("!sabado");
+				else if (LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("SUNDAY"))
+					twitchAPI.sendMessage("!domingo");
+			}
+
 			Map.Entry<LocalDateTime, Episode> entry = yearlySchedule.floorEntry(LocalDateTime.now());
 			// If the first date on the schedule has not arrived yet, we need to wait
 			if(entry == null) {
@@ -126,7 +156,7 @@ public class FromDBToTwitch {
 			else {
 				long delayFromPreviousEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entry.getKey()));
 				// If we go 2 minutes later or more, we wait until the next episode
-				if(delayFromPreviousEpisode>60*5) {
+				if(delayFromPreviousEpisode>60*2) {
 					Map.Entry<LocalDateTime, Episode> entryNext = yearlySchedule.ceilingEntry(LocalDateTime.now());
 					long delayToNextEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entryNext.getKey()));
 					if (delayToNextEpisode > 0) {

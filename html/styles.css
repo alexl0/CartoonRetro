@@ -7,6 +7,19 @@ body {
     -webkit-text-stroke-color: black;
 }
 
+.day {
+    margin: 0px;
+    padding: 0px;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    color: rgb(255, 0, 0);
+    font-size: 30px;
+    height:45px;
+    -webkit-text-stroke: 3px;
+    -webkit-text-stroke-color: black;
+}
+
 .container {
     width: 250px; /* Set the width of the container */
     height: 918px; /* Set the height of the container */
