@@ -1,11 +1,11 @@
 package cartoonretro;
 
 import java.sql.SQLException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.TextStyle;
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -15,7 +15,6 @@ import java.util.Properties;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
-import org.slf4j.ILoggerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +59,9 @@ public class FromDBToTwitch {
 
 	static { System.setProperty("logback.configurationFile", "src/main/resources/logback.xml");}
 
+	public static final String daysOfWeekSpanish[] = {"lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"};
+	public static final DayOfWeek[] daysOfWeekEnglish = { DayOfWeek.MONDAY, DayOfWeek.TUESDAY, DayOfWeek.WEDNESDAY, DayOfWeek.THURSDAY, DayOfWeek.FRIDAY, DayOfWeek.SATURDAY, DayOfWeek.SUNDAY };
+
 	public static void main(String[] args) {
 
 		log.info("¡Starting CartoonRetro!");
@@ -89,7 +91,7 @@ public class FromDBToTwitch {
 		//ChatGPT
 		//chatGPTClient = new ChatGPTClient(chatGPTApiKey);
 
-		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2023, 9, 29, 0, 0), seriesList);
+		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2024, 2, 8, 18, 0), seriesList);
 
 		//TreeMap<LocalDateTime, Episode> shortSchedule = Schedule.createTestSchedule(seriesList);
 
@@ -119,27 +121,36 @@ public class FromDBToTwitch {
 	private static LocalDate lastPrintDate = null;
 	private static void playSchedule(TreeMap<LocalDateTime, Episode> yearlySchedule) {
 		while(true) { 
+
 			// First of all, if we hadn't already, populate the txt files that the HTML is going to read
+			// Those actions are performed every single day
 			if (!schedulePrinted || lastPrintDate.getDayOfYear()!=LocalDate.now().getDayOfYear()) {
+
+				//Stop stream
+				twitchAPI.sendMessage("Pausando stream. ¡Empezando otra vez en 10 segundos!");
+				obsController.stopStream();
+
+
 				InputOutput.printScheduleDaysForHTML(yearlySchedule);
 				schedulePrinted = true;
 				lastPrintDate = LocalDate.now();
 
-				// set the obs source properly AND UPDATE IT!!!
-				if(LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("MONDAY"))
-					twitchAPI.sendMessage("!lunes");
-				else if (LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("TUESDAY"))
-					twitchAPI.sendMessage("!martes");
-				else if (LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("WEDNESDAY"))
-					twitchAPI.sendMessage("!miercoles");
-				else if (LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("THURSDAY"))
-					twitchAPI.sendMessage("!jueves");
-				else if (LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("FRIDAY"))
-					twitchAPI.sendMessage("!viernes");
-				else if (LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("SATURDAY"))
-					twitchAPI.sendMessage("!sabado");
-				else if (LocalDate.now().getDayOfWeek().getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase().equals("SUNDAY"))
-					twitchAPI.sendMessage("!domingo");
+				// TODO generar tambien los de la que viene
+				twitchAPI.sendMessage("¡Horarios para esta semana generados! Puedes verlos escribiendo !lunes, !martes, etc. Puedes reportar cualquier sugerencia en el canal de Telegram.");
+
+				// set the plan obs source properly 
+				for(int i=0; i< daysOfWeekEnglish.length; i++) {
+					if(daysOfWeekEnglish[i]==LocalDate.now().getDayOfWeek())
+						obsController.setPlanDay(daysOfWeekSpanish[i]);
+				}
+
+				try {
+					TimeUnit.SECONDS.sleep(10);
+				} catch (InterruptedException e) {
+					Thread.currentThread().interrupt();
+				}
+				twitchAPI.sendMessage("¡Empezando stream!");
+				obsController.startStream();
 			}
 
 			Map.Entry<LocalDateTime, Episode> entry = yearlySchedule.floorEntry(LocalDateTime.now());
@@ -147,7 +158,9 @@ public class FromDBToTwitch {
 			if(entry == null) {
 				long timeToStart = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), yearlySchedule.firstKey()));
 				try {
-					System.out.println("The schedule has not started yet. First episode(" + yearlySchedule.firstEntry().getValue().getNameOfSerie() + ") starts " + yearlySchedule.firstKey().toLocalDate() + " at " + yearlySchedule.firstKey().toLocalTime() + ". Time remaining: " + timeToStart + " seconds.");
+					String timeToStartMessage = "The schedule has not started yet. First episode(" + yearlySchedule.firstEntry().getValue().getNameOfSerie() + ") starts " + yearlySchedule.firstKey().toLocalDate() + " at " + yearlySchedule.firstKey().toLocalTime() + ". Time remaining: " + timeToStart + " seconds.";
+					System.out.println(timeToStartMessage);
+					twitchAPI.sendMessage(timeToStartMessage);
 					TimeUnit.SECONDS.sleep(timeToStart+1);
 				} catch (InterruptedException e) {
 					Thread.currentThread().interrupt();
@@ -162,7 +175,11 @@ public class FromDBToTwitch {
 					if (delayToNextEpisode > 0) {
 						try {
 							// Sleep to wait until the scheduled time
-							System.out.println("We were " + delayFromPreviousEpisode/60 + " minutes delayed to play the last episode (" + entry.getValue().getNameOfSerie() + "). We were not able to start playing it at " + entry.getKey().toLocalTime() + ", so we're waiting for the next one (" + entryNext.getValue().getNameOfSerie() + ") to be played at " + entryNext.getKey().toLocalTime() + ". " + delayToNextEpisode/60 + " minutes remaining");
+							// TODO mirar aver por que este mensaje sale al acbara el dia royo 23:55. Deberia salir otro distinto
+							// TODO tambien mostrar en pantalla un temporizador en obs con el tiemop que falte mientras espere
+							String mensajeEspera = "We were " + delayFromPreviousEpisode + " seconds delayed to play the last episode (" + entry.getValue().getNameOfSerie() + "). We were not able to start playing it at " + entry.getKey().toLocalTime() + ", so we're waiting for the next one (" + entryNext.getValue().getNameOfSerie() + ") to be played at " + entryNext.getKey().toLocalTime() + ". " + delayToNextEpisode/60 + " minutes remaining";
+							System.out.println(mensajeEspera);
+							twitchAPI.sendMessage(mensajeEspera);
 							TimeUnit.SECONDS.sleep(delayToNextEpisode);
 						} catch (InterruptedException e) {
 							Thread.currentThread().interrupt();
@@ -177,7 +194,6 @@ public class FromDBToTwitch {
 					LocalDateTime currentDateTime = LocalDateTime.now();
 					LocalDateTime nextDateTime = currentDateTime.plusSeconds(episodeToPlay.getDurationSeconds());
 					long delaySeconds = ChronoUnit.SECONDS.between(currentDateTime, nextDateTime) + 1;
-					System.out.println("Playing: " + episodeToPlay.getNameOfSerie() + ", Episode: " + episodeToPlay.getEpisodeNumber() + ", Season: " + episodeToPlay.getSeasonNumber());
 					try {
 						// Sleep to wait until the next episode
 						TimeUnit.SECONDS.sleep(delaySeconds);
@@ -220,20 +236,23 @@ public class FromDBToTwitch {
 		if (searchSerie.isPresent()) {
 			Series foundSeries = searchSerie.get();
 
-			// Change stream info
+			// Change stream info TODO Remove rare characters (accents are permitted) 
+			// TODO a LOT of episodeNames has | and other character. Yu gi oh lleva - por ejemplo
+			// TODO mirar aver por que los acentos se pierden, mirar la codificación
+			// TODO añadir tags solo SI CABE, cortao queda fatal
 			List<String> tagsList = new ArrayList<>();
 			if (foundSeries.getNameOfSerie() != null && !foundSeries.getNameOfSerie().isBlank()) {
-				String sanitizedTag = foundSeries.getNameOfSerie().replaceAll("[^a-zA-Z0-9-_]", "");
+				String sanitizedTag = foundSeries.getNameOfSerie().replaceAll("[^a-zA-Z0-9]", "");
 				if (!sanitizedTag.isBlank())
 					tagsList.add(truncateTag(sanitizedTag));
 			}
 			if (episode.getNameOfEpisode() != null && !episode.getNameOfEpisode().isBlank()) {
-				String sanitizedTag = episode.getNameOfEpisode().replaceAll("[^a-zA-Z0-9-_]", "");
+				String sanitizedTag = episode.getNameOfEpisode().replaceAll("[^a-zA-Z0-9]", "");
 				if (!sanitizedTag.isBlank())
 					tagsList.add(truncateTag(sanitizedTag));
 			}
 			if (episode.getSeasonName() != null && !episode.getSeasonName().isBlank()) {
-				String sanitizedTag = episode.getSeasonName().replaceAll("[^a-zA-Z0-9-_]", "");
+				String sanitizedTag = episode.getSeasonName().replaceAll("[^a-zA-Z0-9]", "");
 				if (!sanitizedTag.isBlank())
 					tagsList.add(truncateTag(sanitizedTag));
 			}
@@ -247,16 +266,22 @@ public class FromDBToTwitch {
 				title+= " Ep " + episode.getEpisodeNumber();
 			if(episode.getNameOfEpisode()!=null & !episode.getNameOfEpisode().isBlank())
 				title+= " " + episode.getNameOfEpisode();
-			if(episode.getSeasonNumber()>0)
+			if(episode.getSeasonNumber()>0) {
 				title+= " Temporada " + episode.getSeasonNumber();
-			if(episode.getSeasonName()!=null && !episode.getSeasonName().isBlank())
-				title+= " " + episode.getSeasonName();
+				if(episode.getSeasonName()!=null && !episode.getSeasonName().isBlank())
+					title+= " " + episode.getSeasonName();
+			}
 			if(title.length()>140)
 				title.substring(0, 140);
+			System.out.println("Playing: " + title);
 			twitchAPI.changeStreamInfo(title, tags);
+			twitchAPI.sendMessage("Ahora: " + title);
 
 			// Calculate aspect ratio
 			String aspectRatio = calculateAspectRatio(episode.getWidth(), episode.getHeight());
+
+			System.out.println("OBS: Changed scene to: " + "Series"+ aspectRatio);
+			twitchAPI.sendMessage("Escena cambiada a " + aspectRatio);
 			obsController.setScene("Series"+ aspectRatio);
 
 			// Play the episode

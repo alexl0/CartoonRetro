@@ -46,9 +46,22 @@ public class FromFilesToDB {
 	public static void main(String[] args) {
 		//Generate series from route
 		List<Series> seriesList = createSeriesFromRoute(route);
+		
+		long startTime = System.currentTimeMillis();
 		populatePlayOrder(seriesList);
-		InputOutput.writeSeriesFileTxt(seriesList, 0, "Route");
+		long endTime = System.currentTimeMillis();
+		long elapsedTime = endTime - startTime;
+		
+		long startTime2 = System.currentTimeMillis();
 		writeSeriesToDB(seriesList);
+		long endTime2 = System.currentTimeMillis();
+		long elapsedTime2 = endTime2 - startTime2;
+
+		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n###############################################################################################################################\n\n\n\n");
+		System.out.println("Total Time to sort episodes for series: " + elapsedTime + " seconds");
+		System.out.println("Total Time to write episodes and series on DB: " + elapsedTime2 + " seconds");
+		
+		InputOutput.writeSeriesFileTxt(seriesList, elapsedTime, "Route");
 	}
 
 
@@ -108,7 +121,7 @@ public class FromFilesToDB {
 									episode.setEpisodeNumber(-1); // Invalid episode number
 								}
 							} catch (NumberFormatException e) {
-								System.out.println("Invalid episode number or season number");
+								System.err.println("Invalid episode number or season number: " + videoFile.getName());
 								episode.setEpisodeNumber(-1); // Invalid episode number
 								episode.setNameOfEpisode(fileName);
 							}
@@ -151,7 +164,6 @@ public class FromFilesToDB {
 	}
 
 	public static void populatePlayOrder(List<Series> seriesList) {
-		long startTime = System.currentTimeMillis();
 		for (Series series : seriesList) {
 			long startTimeSerie = System.currentTimeMillis();
 			List<Episode> episodes = series.getEpisodes();
@@ -168,13 +180,8 @@ public class FromFilesToDB {
 			}
 			long endTimeSerie = System.currentTimeMillis();
 			long elapsedTimeSerie = endTimeSerie - startTimeSerie;
-	        double elapsedTimeMinutesSerie = elapsedTimeSerie / 60000.0;
-			System.out.println("Time to sort series " + series.getNameOfSerie() + " : " + elapsedTimeMinutesSerie + " minutes");
+			System.out.println("Time to sort series " + series.getNameOfSerie() + " : " + elapsedTimeSerie + " seconds");
 		}
-		long endTime = System.currentTimeMillis();
-		long elapsedTime = endTime - startTime;
-        double elapsedTimeMinutes = elapsedTime / 60000.0;
-		System.out.println("Total Time to sort episodes for series: " + elapsedTimeMinutes + " minutes");
 	}
 
 	private static void writeSeriesToDB(List<Series> seriesList) {

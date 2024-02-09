@@ -16,6 +16,8 @@ import cartoonretro.model.Series;
 
 public class InputOutput {
 
+	private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+	
 	// Helper method to load properties from a file
 	public static Properties loadPropertiesFile(String filePath) {
 		Properties properties = new Properties();
@@ -95,10 +97,11 @@ public class InputOutput {
 				for (Map.Entry<LocalDateTime, Episode> entry : schedule.entrySet()) {
 					if (entry.getKey().toLocalDate().isEqual(LocalDate.now())) {
 						// Write the schedule entry to the file
-						String originalHour = entry.getKey().toLocalTime().toString();
-						String line = originalHour.substring(0,originalHour.length()-3) + " " + entry.getValue().getNameOfSerie();
+						String line = entry.getKey().toLocalTime().format(formatter) + " " + entry.getValue().getNameOfSerie();
 						writer.write(line);
-						writer.newLine();
+						// If is not the last line, we print a new line
+						if(i!=daysOfTheWeek.length-1)
+							writer.newLine();
 					}
 				}
 

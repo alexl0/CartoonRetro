@@ -20,7 +20,7 @@ public class Schedule {
 	/**
 	 * Para cada serie, coje el episodio siguiente
 	 * (o el primero si es la primera vez, o el ultimo en reproducirse ha sido el ultimo)
-	 * y lo añade a la planificación
+	 * y lo añade a la planificación.
 	 * @param startDateTime Fecha en la cual empezara la planificacion
 	 * @param seriesList Lista con todas las series
 	 * @return
@@ -78,14 +78,15 @@ public class Schedule {
 			// Wait until the next day
 			currentDateTime = currentDateTime.plusDays(1).with(LocalTime.MIDNIGHT);
 		}
-		InputOutput.printScheduleToFile(schedule, "Schedule2.txt");
+		InputOutput.printScheduleToFile(schedule, "Schedule.txt");
 		return schedule;
 	}
 
 	/**
 	 * Schedules short episodes (0 Season of The Simpsons) to start the next minute.
 	 * (They are not in order).
-	 * This method is a variant of createYearlySchedule
+	 * This method is a variant of createYearlySchedule.
+	 * It's not being used at the moment.
 	 * @param startDateTime
 	 * @param seriesList
 	 * @return
@@ -104,7 +105,7 @@ public class Schedule {
 				startDate = startDate.plus(Duration.ofSeconds(e.getDurationSeconds()));
 			}
 
-		InputOutput.printScheduleToFile(shortSchedule, "ScheduleSimpson0Season");
+		InputOutput.printScheduleToFile(shortSchedule, "ScheduleSimpson0Season.txt");
 		return shortSchedule;
 	}
 
