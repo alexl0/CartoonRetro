@@ -1,4 +1,4 @@
-00 Agallas, el perro cobarde
+00:00 Agallas, el perro cobarde
 00:21 El Chicho Terremoto
 00:41 La Banda Del Patio
 00:52 Ben 10 (2016)
@@ -44,7 +44,7 @@
 14:06 Ed, Edd y Eddy
 14:27 Futurama
 14:49 Inuyasha
-15 Los Picapiedra
+15:10 Los Picapiedra
 15:35 Los Simpson
 15:36 Malcolm el de en medio
 15:58 Naruto

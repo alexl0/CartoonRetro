@@ -21,7 +21,7 @@ body {
 }
 
 .container {
-    width: 250px; /* Set the width of the container */
+    width: 200px; /* Set the width of the container */
     height: 918px; /* Set the height of the container */
     overflow: hidden;
     position: relative;
