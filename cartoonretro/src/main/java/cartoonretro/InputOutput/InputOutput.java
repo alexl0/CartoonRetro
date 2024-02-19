@@ -100,8 +100,8 @@ public class InputOutput {
 						String line = entry.getKey().toLocalTime().format(formatter) + " " + entry.getValue().getNameOfSerie();
 						writer.write(line);
 						// If is not the last line, we print a new line
-						if(i!=daysOfTheWeek.length-1)
-							writer.newLine();
+						//if(i!=daysOfTheWeek.length-1) //Comented because on Sunday it didn't print any line break
+						writer.newLine();
 					}
 				}
 

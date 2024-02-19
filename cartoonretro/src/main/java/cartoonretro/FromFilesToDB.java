@@ -51,17 +51,19 @@ public class FromFilesToDB {
 		populatePlayOrder(seriesList);
 		long endTime = System.currentTimeMillis();
 		long elapsedTime = endTime - startTime;
+		double elapsedTimeSeconds = elapsedTime / 1000.0;
 		
 		long startTime2 = System.currentTimeMillis();
 		writeSeriesToDB(seriesList);
 		long endTime2 = System.currentTimeMillis();
 		long elapsedTime2 = endTime2 - startTime2;
+		double elapsedTimeMinutes2 = elapsedTime2 / 60000.0;
 
 		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n###############################################################################################################################\n\n\n\n");
-		System.out.println("Total Time to sort episodes for series: " + elapsedTime + " seconds");
-		System.out.println("Total Time to write episodes and series on DB: " + elapsedTime2 + " seconds");
+		System.out.println("Total Time to sort episodes for series: " + elapsedTimeSeconds + " seconds");
+		System.out.println("Total Time to write episodes and series on DB: " + elapsedTimeMinutes2 + " minutes");
 		
-		InputOutput.writeSeriesFileTxt(seriesList, elapsedTime, "Route");
+		InputOutput.writeSeriesFileTxt(seriesList, elapsedTimeMinutes2, "Route");
 	}
 
 

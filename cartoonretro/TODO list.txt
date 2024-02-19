@@ -71,3 +71,22 @@ twitch ignorar todos los mensajes que empiecen por # tanto en streamelements com
 mirar a ver como hacer para que la api de twitch me devuelva a parte del bearer token, un refresh token.
 
 
+hacer que la planificacion se mande por mensaje una vez al dia con la planificacion de 7 dias, y que vaya rotando con un sourceswitcher de esos de obs 
+
+hacer que las series como ben 10 que son muchas series, no se reproduzcan todas en un dia sino que solo una serie y cuando acabe, empiece la siguiente. es decir, que se comporten casi como si fueran season, mirar a ver.
+
+hacer lo de visible de lunes martes etc con java obs websocket por que el streamerbot se cae cuando quiere
+
+hacer que aunque alguien cambie la planificcino con el comando !lunes por ejemplo, si es miercoles, vuelva solo siempre al miercoles.
+
+Scene Item not found: creo que se puede deber a la carpeta en la que estan contenidos los source browser de los planlunes etc
+
+arregalr los comandos de plan de streamerbot ya que quite los grupos
+
+
+quitar subtitulos de sereis como : Playing: Dragon Ball Ep 1 Bulma y Son Goku Temporada 1
+
+encajar bien las letras del a planificacion
+
+aumentar el tiempo de 2 min a 5 min para lo del retraso
+mirar las capturas del movil con fallos

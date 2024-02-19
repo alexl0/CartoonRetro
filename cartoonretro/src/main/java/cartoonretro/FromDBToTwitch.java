@@ -91,8 +91,12 @@ public class FromDBToTwitch {
 		//ChatGPT
 		//chatGPTClient = new ChatGPTClient(chatGPTApiKey);
 
-		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2024, 2, 8, 18, 0), seriesList);
+		System.out.println("Creating planification for the next 365 days.");
+		// BE CAREFUL! Put any day but only 00:00 o clock!!
+		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2024, 2, 8, 0, 0), seriesList);
+		System.out.println("Planification stored.");
 
+		
 		//TreeMap<LocalDateTime, Episode> shortSchedule = Schedule.createTestSchedule(seriesList);
 
 		playSchedule(yearlySchedule);
@@ -177,7 +181,8 @@ public class FromDBToTwitch {
 							// Sleep to wait until the scheduled time
 							// TODO mirar aver por que este mensaje sale al acbara el dia royo 23:55. Deberia salir otro distinto
 							// TODO tambien mostrar en pantalla un temporizador en obs con el tiemop que falte mientras espere
-							String mensajeEspera = "We were " + delayFromPreviousEpisode + " seconds delayed to play the last episode (" + entry.getValue().getNameOfSerie() + "). We were not able to start playing it at " + entry.getKey().toLocalTime() + ", so we're waiting for the next one (" + entryNext.getValue().getNameOfSerie() + ") to be played at " + entryNext.getKey().toLocalTime() + ". " + delayToNextEpisode/60 + " minutes remaining";
+							//String mensajeEsperaIngles = "We were " + delayFromPreviousEpisode + " seconds delayed to play the last episode (" + entry.getValue().getNameOfSerie() + "). We were not able to start playing it at " + entry.getKey().toLocalTime() + ", so we're waiting for the next one (" + entryNext.getValue().getNameOfSerie() + ") to be played at " + entryNext.getKey().toLocalTime() + ". " + delayToNextEpisode/60 + " minutes remaining";
+							String mensajeEspera = "Tuvimos un retraso de " + delayFromPreviousEpisode + " segundos para reproducir el último episodio (" + entry.getValue().getNameOfSerie() + "). No pudimos empezarlo a las " + entry.getKey().toLocalTime() + ", así que estamos esperando al siguiente (" + entryNext.getValue().getNameOfSerie() + "). Empezará a las: " + entryNext.getKey().toLocalTime() + ". Quedan " + delayToNextEpisode/60 + " minutos.";
 							System.out.println(mensajeEspera);
 							twitchAPI.sendMessage(mensajeEspera);
 							TimeUnit.SECONDS.sleep(delayToNextEpisode);
