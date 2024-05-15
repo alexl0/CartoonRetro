@@ -46,7 +46,7 @@ public class FromDBToTwitch {
 
 	// OBS
 	private static String obsWebSocketPass;
-	private static String obsWebSocketIp = "192.168.1.3";
+	private static String obsWebSocketIp = "10.0.2.15"; //TODO extract to PASSWORD.properties file
 
 	private static OBSController obsController;
 	private static VLCController vlcController;

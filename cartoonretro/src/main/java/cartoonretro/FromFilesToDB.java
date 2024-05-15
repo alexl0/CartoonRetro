@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.File;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.lang.ProcessBuilder.Redirect;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
@@ -17,6 +18,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.nio.file.Paths;
 
 /**
  * 1. Place new series in the folder.
@@ -41,18 +44,36 @@ public class FromFilesToDB {
 	 */
 
 	// Path to the folder containing series folders. Use a route like this: E:\\PCEXTERNO\\Completo
-	static final String route = "E:\\PCEXTERNO\\Completo";
 
+	// Windows
+	//static final String osUsed = "Windows" ;
+
+	// Linux
+	static final String osUsed = "Linux" ;
+	static String route; 
+	static String separator; 
+
+
+	@SuppressWarnings("unused")
 	public static void main(String[] args) {
+		if(osUsed=="Windows") {
+			route = "E:\\PCEXTERNO\\Completo";
+			separator = "\\";
+		}
+		if(osUsed=="Linux") {
+			route = "/media/al/TOSHIBA EXT/PCEXTERNO/Completo";
+			separator = "/";
+		}
+
 		//Generate series from route
 		List<Series> seriesList = createSeriesFromRoute(route);
-		
+
 		long startTime = System.currentTimeMillis();
 		populatePlayOrder(seriesList);
 		long endTime = System.currentTimeMillis();
 		long elapsedTime = endTime - startTime;
 		double elapsedTimeSeconds = elapsedTime / 1000.0;
-		
+
 		long startTime2 = System.currentTimeMillis();
 		writeSeriesToDB(seriesList);
 		long endTime2 = System.currentTimeMillis();
@@ -62,12 +83,13 @@ public class FromFilesToDB {
 		System.out.println("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n###############################################################################################################################\n\n\n\n");
 		System.out.println("Total Time to sort episodes for series: " + elapsedTimeSeconds + " seconds");
 		System.out.println("Total Time to write episodes and series on DB: " + elapsedTimeMinutes2 + " minutes");
-		
+
 		InputOutput.writeSeriesFileTxt(seriesList, elapsedTimeMinutes2, "Route");
 	}
 
 
 
+	@SuppressWarnings("unused")
 	private static List<Series> createSeriesFromRoute(String route) {
 		long startTime = System.currentTimeMillis();
 
@@ -81,7 +103,10 @@ public class FromFilesToDB {
 					long startTimeSerie = System.currentTimeMillis();
 					Series series = new Series();
 					series.setNameOfSerie(seriesDir.getName());
-					series.setPath(route + "\\" + series.getNameOfSerie());
+					series.setPath(route + separator + series.getNameOfSerie());
+					//TODO borrar esto o comprobar si funciona
+					//String seriesPath = Paths.get(route, series.getNameOfSerie()).toString();
+					//series.setPath(seriesPath);
 
 					// Only process video files
 					List<Episode> episodes = new ArrayList<>();
@@ -129,7 +154,7 @@ public class FromFilesToDB {
 							}
 
 							// Set the duration of the episode (you can obtain this information from the video file)
-							episode.setDurationSeconds(getVideoDurationInSeconds(series.getPath() + "\\" + episode.getFileName())); // Replace with actual duration
+							episode.setDurationSeconds(getVideoDurationInSeconds(series.getPath() + separator + episode.getFileName())); // Replace with actual duration
 
 							// Set the width and height of the episode
 							String videoInfo = getVideoInfo(videoFile.getAbsolutePath());
@@ -149,17 +174,17 @@ public class FromFilesToDB {
 
 					series.setEpisodes(episodes);
 					seriesList.add(series);		long endTime = System.currentTimeMillis();
-					
+
 					long endTimeSerie = System.currentTimeMillis();
 					long elapsedTimeSerie = endTimeSerie - startTimeSerie;
-			        double elapsedTimeMinutesSerie = elapsedTimeSerie / 60000.0;
+					double elapsedTimeMinutesSerie = elapsedTimeSerie / 60000.0;
 					System.out.println("Time to create series " + series.getNameOfSerie() + " from route: " + elapsedTimeMinutesSerie + " minutes");
 				}
 			}
 		}
 		long endTime = System.currentTimeMillis();
 		long elapsedTime = endTime - startTime;
-        double elapsedTimeMinutes = elapsedTime / 60000.0;
+		double elapsedTimeMinutes = elapsedTime / 60000.0;
 		System.out.println("Total Time to create series from route: " + elapsedTimeMinutes + " minutes");
 
 		return seriesList;
@@ -202,15 +227,20 @@ public class FromFilesToDB {
 	}
 
 	// IO output operations with video with metadata using ProcessBuilder and the mediainfo command
+	@SuppressWarnings("unused")
 	public static int getVideoDurationInSeconds(String videoFilePath) {
 		try {
 			Path path = Paths.get(videoFilePath);
-
+			ProcessBuilder processBuilder;
 			// Execute mediainfo command and capture output
-			ProcessBuilder processBuilder = new ProcessBuilder("mediainfo", "--Inform=Video;%Duration%", path.toString());
+			List<String> command = new ArrayList<>();
+			command.add("mediainfo");
+			command.add("--Inform=Video;%Duration%");
+			command.add(path.toString());
+			processBuilder = new ProcessBuilder(command);
 			Process process = processBuilder.start();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-
+			assert processBuilder.redirectInput() == Redirect.PIPE;
 			// Read the duration from the output
 			String durationString = reader.readLine();
 			if (durationString != null) {
@@ -224,6 +254,8 @@ public class FromFilesToDB {
 			e.printStackTrace();
 		} catch (NumberFormatException e) {
 			e.printStackTrace();
+			System.err.println("Error with the duration: ");
+			System.err.println("videoFilePath: " + videoFilePath);
 		}
 
 		return -1; // Failed to retrieve duration
