@@ -88,7 +88,7 @@ public class InputOutput {
 			// Get the day of the week
 			DayOfWeek dayOfWeek = daysOfTheWeek[i];
 			// Define the path to the text file relative to your Maven project directory
-			String filePath = "../html/planificationHTML" + dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH) + "/your-text-file.txt";
+			String filePath = "../html/planificationHTML" + dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH).toUpperCase() + "/your-text-file.txt";
 			try {
 				// Open the file for writing, and set the append mode to false
 				BufferedWriter writer = new BufferedWriter(new FileWriter(filePath, false));

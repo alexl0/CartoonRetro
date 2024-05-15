@@ -93,7 +93,7 @@ public class FromDBToTwitch {
 
 		System.out.println("Creating planification for the next 365 days.");
 		// BE CAREFUL! Put any day but only 00:00 o clock!!
-		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2024, 2, 8, 0, 0), seriesList);
+		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2024, 5, 15, 0, 0), seriesList); //TODO tambien sacar esto a un .properties, pero diferenciar el de cosas secretas como password y otras cosa que puedan estar en git
 		System.out.println("Planification stored.");
 
 		
