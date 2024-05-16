@@ -1,4 +1,10 @@
 /* styles.css */
+
+@font-face {
+    font-family: "Komika Axis Regular";
+    src: url('KOMIKAX_.ttf') format('truetype');
+}
+
 body {
     margin: 0;
     padding: 0;
