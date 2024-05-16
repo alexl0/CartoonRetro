@@ -11,19 +11,25 @@ import java.awt.*;
 public class VLCController {
 
 	String[] args = {
-		    "--video-filter", 
-		    "transform",
-		    "--transform-type",
-		    "hflip",
-		    "--blur-factor",
-		    "127"
-		};
-	
-	public void playEpisode(String path, int episodeWidth, int episodeHeight) {
+			"--video-filter", 
+			"transform",
+			"--transform-type",
+			"hflip",
+			"--blur-factor",
+			"127"
+	};
+
+	public void playEpisode(String path, int episodeWidth, int episodeHeight, String so) {
 		SwingUtilities.invokeLater(() -> {
 
 			// Create the media player component
-			EmbeddedMediaPlayerComponent mediaPlayerComponent = new EmbeddedMediaPlayerComponent(args);
+			//TODO differentiate linux from windows here, in windos args doesnt give any errors
+			//EmbeddedMediaPlayerComponent mediaPlayerComponent = new EmbeddedMediaPlayerComponent(args);
+			EmbeddedMediaPlayerComponent mediaPlayerComponent;
+			if(so.equals("windows"))
+				mediaPlayerComponent = new EmbeddedMediaPlayerComponent(args);
+			else // linux
+				mediaPlayerComponent = new EmbeddedMediaPlayerComponent();
 
 			// Create the JFrame to display the video
 			JFrame frame = new JFrame("VLCJ Video Player");
@@ -42,12 +48,12 @@ public class VLCController {
 					// This method is called when playback reaches the end of the media
 					System.out.println("Video: " + path + " playback finished");
 
-                    // Dispose of the media player component
-                    //mediaPlayerComponent.release();
+					// Dispose of the media player component
+					//mediaPlayerComponent.release();
 
-                    // Close the JFrame
-                    frame.dispose(); //We cannot do this because it closes itself forever and stops the program
-					
+					// Close the JFrame
+					frame.dispose(); //We cannot do this because it closes itself forever and stops the program
+
 					// Add your code to handle what happens after the video ends
 					// For example, you can close the video window or play the next episode
 				}

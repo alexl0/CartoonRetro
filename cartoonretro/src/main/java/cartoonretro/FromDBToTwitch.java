@@ -46,7 +46,9 @@ public class FromDBToTwitch {
 
 	// OBS
 	private static String obsWebSocketPass;
-	private static String obsWebSocketIp = "10.0.2.15"; //TODO extract to PASSWORD.properties file
+	private static String obsWebSocketIp;
+	private static String so;
+	private static String separator; //If on Linux, it'll be set to /, if on windows, \
 
 	private static OBSController obsController;
 	private static VLCController vlcController;
@@ -85,6 +87,16 @@ public class FromDBToTwitch {
 		//VLC
 		vlcController = new VLCController();
 
+		if(so.equals("linux")) {
+			separator="/";
+			// Set LD_LIBRARY_PATH
+			//This is needed for linux TODO make it ONLY for linux
+			String vlcLibPath = "/snap/vlc/3777/usr/lib/";
+			System.setProperty("jna.library.path", vlcLibPath);
+		}
+		if(so.equals("windows"))
+			separator="\\";
+
 		//Twitch
 		twitchAPI = new TwitchAPI(twitchBroadcasterId, twitchClientId, twitchClientSecret, twitchUserAccessToken, twitchUserRefreshToken);
 
@@ -96,7 +108,7 @@ public class FromDBToTwitch {
 		TreeMap<LocalDateTime, Episode> yearlySchedule = Schedule.createYearlySchedule(LocalDateTime.of(2024, 5, 15, 0, 0), seriesList); //TODO tambien sacar esto a un .properties, pero diferenciar el de cosas secretas como password y otras cosa que puedan estar en git
 		System.out.println("Planification stored.");
 
-		
+
 		//TreeMap<LocalDateTime, Episode> shortSchedule = Schedule.createTestSchedule(seriesList);
 
 		playSchedule(yearlySchedule);
@@ -172,8 +184,8 @@ public class FromDBToTwitch {
 			}
 			else {
 				long delayFromPreviousEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entry.getKey()));
-				// If we go 2 minutes later or more, we wait until the next episode
-				if(delayFromPreviousEpisode>60*2) {
+				// If we go 2 minutes later or more, we wait until the next episode TODO externalizar esta variable tambien
+				if(delayFromPreviousEpisode>60*100) {
 					Map.Entry<LocalDateTime, Episode> entryNext = yearlySchedule.ceilingEntry(LocalDateTime.now());
 					long delayToNextEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entryNext.getKey()));
 					if (delayToNextEpisode > 0) {
@@ -224,7 +236,7 @@ public class FromDBToTwitch {
 			Optional<Episode> searchEpisode = foundSeries.getEpisodes().stream().filter(episode -> episode.getFileName().toLowerCase().contains(fileName.toLowerCase())).findFirst();
 			if (searchEpisode.isPresent()) {
 				Episode foundEpisode = searchEpisode.get();
-				vlcController.playEpisode(foundSeries.getPath() + "\\" + foundEpisode.getFileName(), foundEpisode.getWidth(), foundEpisode.getHeight());
+				vlcController.playEpisode(foundSeries.getPath() + separator + foundEpisode.getFileName(), foundEpisode.getWidth(), foundEpisode.getHeight(), so);
 				//Calculate aspect ratio
 				String aspectRatio = calculateAspectRatio(foundEpisode.getWidth(), foundEpisode.getHeight());
 				obsController.setScene("Series"+ aspectRatio);
@@ -290,7 +302,7 @@ public class FromDBToTwitch {
 			obsController.setScene("Series"+ aspectRatio);
 
 			// Play the episode
-			vlcController.playEpisode(foundSeries.getPath() + "\\" + episode.getFileName(), episode.getWidth(), episode.getHeight());
+			vlcController.playEpisode(foundSeries.getPath() + separator + episode.getFileName(), episode.getWidth(), episode.getHeight(), so);
 		} else {
 			System.out.println("Series not found");
 		}
@@ -308,6 +320,7 @@ public class FromDBToTwitch {
 	private static void readProperties() {
 		// Read properties
 		Properties properties = InputOutput.loadPropertiesFile("src/PASSWORDS.properties");
+		Properties propertiesPublic = InputOutput.loadPropertiesFile("src/PUBLIC.properties");
 
 		// Access the properties using the keys defined in your .properties file
 		//chatGPTApiKey = properties.getProperty("chatgpt_api_key");
@@ -317,6 +330,9 @@ public class FromDBToTwitch {
 		twitchClientSecret = properties.getProperty("twitch_client_secret");
 		twitchUserAccessToken = properties.getProperty("twitch_user_access_token");
 		twitchUserRefreshToken = properties.getProperty("twitch_user_refresh_token");
+
+		obsWebSocketIp = propertiesPublic.getProperty("obsWebSocketIp");
+		so = propertiesPublic.getProperty("so").toLowerCase();
 	}
 
 	public static String calculateAspectRatio(int width, int height) {
