@@ -34,9 +34,14 @@ public class VLCController {
 			// Create the JFrame to display the video
 			JFrame frame = new JFrame("VLCJ Video Player");
 			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setUndecorated(true);
 			frame.setContentPane(mediaPlayerComponent);
 
-			frame.setPreferredSize(new Dimension(episodeWidth, episodeHeight + 28)); // Add 28 due to the 28 pixels of the window bar
+			if(so.equals("windows"))
+				frame.setPreferredSize(new Dimension(episodeWidth, episodeHeight + 28)); // Add 28 due to the 28 pixels of the window bar
+			else // linux
+				frame.setPreferredSize(new Dimension(episodeWidth, episodeHeight)); // Add 28 due to the 28 pixels of the window bar
+
 			frame.pack();
 			frame.setVisible(true);
 
