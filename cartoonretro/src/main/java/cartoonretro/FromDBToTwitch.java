@@ -184,8 +184,8 @@ public class FromDBToTwitch {
 			}
 			else {
 				long delayFromPreviousEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entry.getKey()));
-				// If we go 2 minutes later or more, we wait until the next episode TODO externalizar esta variable tambien
-				if(delayFromPreviousEpisode>60*100) {
+				// If we go 3 minutes later or more, we wait until the next episode TODO externalizar esta variable tambien
+				if(delayFromPreviousEpisode>60*3) {
 					Map.Entry<LocalDateTime, Episode> entryNext = yearlySchedule.ceilingEntry(LocalDateTime.now());
 					long delayToNextEpisode = Math.abs(ChronoUnit.SECONDS.between(LocalDateTime.now(), entryNext.getKey()));
 					if (delayToNextEpisode > 0) {
