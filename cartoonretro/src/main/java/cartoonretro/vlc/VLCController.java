@@ -33,7 +33,8 @@ public class VLCController {
 
 			// Create the JFrame to display the video
 			JFrame frame = new JFrame("VLCJ Video Player");
-			frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			//frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 			frame.setUndecorated(true);
 			frame.setContentPane(mediaPlayerComponent);
 
@@ -54,10 +55,10 @@ public class VLCController {
 					System.out.println("Video: " + path + " playback finished");
 
 					// Dispose of the media player component
-					//mediaPlayerComponent.release();
+					//mediaPlayerComponent.release(); //We cannot do this because it closes itself forever and stops the program
 
 					// Close the JFrame
-					frame.dispose(); //We cannot do this because it closes itself forever and stops the program
+					frame.dispose(); 
 
 					// Add your code to handle what happens after the video ends
 					// For example, you can close the video window or play the next episode
