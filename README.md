@@ -1,4 +1,4 @@
-# CartoonRetro
+# [Cartoon Retro](twitch.tv/cartoonretro)
 I just don't want my young cousins to see Pepa Pig so I automated a Twitch channel that shows old cartoons.
 
 The channel is automated by a Java Maven project.
@@ -8,4 +8,5 @@ It's connected to:
 
 The project runs on an Ubuntu virtual machine and only works on VMWare Workstation due to VirtualBox GPU limitations. 
 
-twitch.tv/cartoonretro
+
+[twitch.tv/cartoonretro](twitch.tv/cartoonretro)
