@@ -1,4 +1,6 @@
 # [Cartoon Retro](twitch.tv/cartoonretro)
+![Cartoon Retro](https://github.com/alexl0/CartoonRetro/blob/main/logo/CartoonRetro%20Logo.png?raw=true)
+
 I just don't want my young cousins to see Pepa Pig so I automated a Twitch channel that shows old cartoons.
 
 The channel is automated by a Java Maven project.
