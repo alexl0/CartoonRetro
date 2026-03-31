@@ -12,6 +12,6 @@ It's connected to:
 
 The project runs on an Ubuntu virtual machine and only works on VMWare Workstation due to VirtualBox GPU limitations. 
 
-[twitch.tv/cartoonretro](twitch.tv/cartoonretro)
+[twitch.tv/cartoonretro](https://twitch.tv/cartoonretro)
 
 (It's shut down right now)
